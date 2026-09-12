@@ -1,0 +1,194 @@
+# Humming
+
+Record a melody, get it back as a Strudel pattern. This covers the
+transcription pipeline, the decisions inside it, and the iOS app that puts a
+microphone in your pocket.
+
+For the documentation-question path, see [architecture.md](architecture.md).
+
+## The shape of it
+
+```mermaid
+flowchart TD
+    M["Microphone<br/>getUserMedia + MediaRecorder"] --> D["decodeAudioData<br/>→ mono 16 kHz → WAV"]
+    D -->|"POST /api/hum<br/>multipart"| S["FastAPI<br/>app/server.py"]
+    S --> T["transcribe()<br/>app/backend/melody.py"]
+    T --> P["pYIN pitch track<br/>+ onset detection"]
+    P --> N["note segments"]
+    N --> Q["beat_track → bpm<br/>quantise to 16ths"]
+    Q --> K["key<br/>Krumhansl-Schmuckler"]
+    K --> J["summary JSON<br/>+ mini-notation"]
+    J --> L["build_prompt()"]
+    L --> A["the same doc agent<br/>run_llm()"]
+    A -->|"elaborated pattern"| S
+    J -->|"literal pattern"| S
+    S -->|"{transcription, pattern,<br/>answer_html, sources}"| B["addHumAnswer()<br/>app/web/static/app.js"]
+```
+
+Two patterns come back from one request. `pattern` is the literal
+transcription, and `answer_html` is the agent's elaboration on top of it.
+
+## The model never hears the audio
+
+This is the load-bearing decision. Language models are unreliable at hearing
+pitch and timing, and very good at taking a correct skeleton and making it
+musical. So the audio is analysed with signal processing, and what reaches the
+agent is a text summary: tempo, key, and a mini-notation string.
+
+The agent's job is then the one it is already good at and already grounded
+for. `build_prompt` phrases the request so the existing "code creation or
+refinement" branch of the system prompt in `app/backend/core.py` handles it,
+and retrieval runs exactly as it does for a typed question. No second agent,
+no second system prompt.
+
+## Stage by stage
+
+**Pitch.** `librosa.pyin` gives a per-frame fundamental with a voiced flag.
+Each voiced frame is rounded to the nearest semitone and equal runs are
+grouped. This needs no onset detector, which matters because a legato hum has
+no attack transient to detect.
+
+**Re-articulation.** Pitch runs alone cannot see a repeated note: humming
+"c c" is one unbroken run of the same semitone. Onset detection supplies the
+missing boundary, and a run is cut wherever one fires. `ONSET_DELTA` is
+deliberately high. A missed re-articulation costs one repeated note; a
+spurious one shreds a held note into fragments, which is far more audible.
+
+**Tempo.** `librosa.beat.beat_track`, octave-folded into 70 to 160 bpm, then
+snapped to a multiple of 5 when it lands within 1.5% of one. An earlier
+version refined this by fitting note onsets to the grid; measured against
+synthesised hums at known tempos it made the estimate worse, because the cost
+is scale-free and the search drifted downwards. It was removed.
+
+**Key.** A duration-weighted pitch-class histogram correlated against the
+Krumhansl-Schmuckler profiles over all 24 rotations. Weighting by duration
+rather than note count is what stops a long held tonic being outvoted by
+passing sixteenths.
+
+**Quantisation.** Onsets and durations in seconds become integer step
+positions on a 16th-note grid. Every note claims at least one step, and a note
+overlapping its successor is truncated, so the result is a strictly ordered
+monophonic line, which is what the mini-notation writer assumes.
+
+### How well it works
+
+Measured on synthesised hums with vibrato, an amplitude envelope and noise,
+across seven melodies spanning 70 to 150 bpm, quarters and eighths:
+
+| | correct |
+| --- | --- |
+| Key | 7 of 7 |
+| Note sequence | 6 of 7 |
+| Tempo | 6 of 7 |
+
+The tempo failure is a hum at 140 bpm read as 95. Half-, double- and
+third-time readings are inherent to beat tracking a voice, and they are
+survivable: note lengths are quantised against whatever bpm comes out, so the
+relative rhythm is preserved and only the playback speed is wrong. `setcpm` is
+the first line of every generated pattern precisely so it is easy to correct.
+
+## Why the browser encodes WAV
+
+`MediaRecorder` produces whatever the engine prefers: WebM/Opus on Chrome, AAC
+in an MP4 container on Safari and in the iOS web view. libsndfile, which
+`soundfile` wraps, reads neither. Web Audio decodes all of them, so
+`blobToWav` decodes, downmixes and resamples to 16 kHz mono in the browser and
+the server only ever sees one format. It also shrinks the upload by an order
+of magnitude, which matters on a phone.
+
+`OfflineAudioContext` does the downmix and the resample in one pass using the
+engine's own resampler.
+
+## Two patterns, and why the literal one is always first
+
+`addHumAnswer` renders the literal transcription above the agent's version,
+always, even when the model leg failed outright. If the agent's pattern is
+wrong or the OpenAI key is dead, the user still gets something that plays back
+what they hummed. Recognising your own melody coming back is the entire point
+of the feature, and it should not depend on the model behaving.
+
+The same reasoning shapes the prompt. `melody_expression` hands the agent a
+finished `note(...).slow(n)` expression to chain onto rather than a rule to
+remember, because asked to "add `.slow(2)`" the model simply forgets, and the
+melody then plays at double speed.
+
+## The iOS app
+
+`mobile/` is a [Capacitor](https://capacitorjs.com) shell around the same web
+app. There is no second interface: `sync-www.mjs` copies `app/web` into
+`mobile/www` and the phone runs the code you already debugged in a browser.
+
+The backend does not move. It is Python and needs an OpenAI key and a Pinecone
+index, so it stays on your machine or a host, and the app talks to it over the
+network.
+
+### Setup
+
+Requires **Xcode** (the full app, not just Command Line Tools) and
+**CocoaPods** (`brew install cocoapods`).
+
+```bash
+cd mobile
+npm install
+STRUDEL_API_BASE=http://192.168.1.20:8000 npm run sync
+npx cap add ios
+node configure-ios.mjs
+npx cap open ios
+```
+
+Then press Run in Xcode.
+
+`STRUDEL_API_BASE` is the address of the backend as the phone sees it. A
+simulator can reach your Mac on `http://localhost:8000`; a real device needs
+the Mac's LAN address, and the backend has to be started with
+`--host 0.0.0.0` to answer on it. Re-run `npm run sync` after any change to
+`app/web`, and after changing the address.
+
+### What configure-ios.mjs does, and why each part is not optional
+
+Run it once after `npx cap add ios`, and again if you regenerate `ios/`. It is
+idempotent, and if an anchor no longer matches a future Capacitor template it
+prints the snippet to apply by hand rather than corrupting the file.
+
+- **`NSMicrophoneUsageDescription`.** Without it iOS kills the app the instant
+  `getUserMedia` is called. Not a denied permission, a crash.
+- **The audio session.** A `WKWebView` defaults to a session the ring/silent
+  switch mutes, so Strudel would play nothing on a phone on silent, which is
+  most phones. `.playAndRecord` also routes output to the earpiece by default,
+  so after the first recording the music would come out of the phone-call
+  speaker; `.defaultToSpeaker` is what keeps it on the loudspeaker.
+- **`NSAllowsLocalNetworking`.** App Transport Security blocks plain http, and
+  the backend on your Mac is plain http. This is development-only. Serve the
+  backend over https before shipping anything.
+
+The page also needs `viewport-fit=cover` and `env(safe-area-inset-*)` padding,
+both already in `app/web`, or the rail sits under the notch and the composer
+under the home indicator.
+
+### Licensing
+
+Strudel is AGPL-3.0, and Apple's App Store terms are widely held to conflict
+with GPL-family licenses for distributed binaries. This shell loads
+`@strudel/web` from a CDN at runtime rather than bundling it, so the binary
+does not contain AGPL code, but that is not legal advice and the AGPL's
+network clause is a separate question. For personal use and TestFlight it does
+not arise.
+
+## Invariants and traps
+
+- **The grid constants are shared.** `STEPS_PER_BEAT`, `BEATS_PER_CYCLE` and
+  the `cpm` conversion in `melody.py` all describe one bar of 4/4 per cycle.
+  Change one and the generated `setcpm` stops matching the note lengths.
+- **`to_pattern` and `build_prompt` must agree.** Both call
+  `melody_expression`, so the literal pattern and the one the agent is told to
+  use cannot drift apart. Keep it that way.
+- **Only the prebaked sounds exist.** `ensureStrudel` loads dirt-samples and
+  nothing else, so `piano` and every `gm_*` soundfont name fails at playback
+  with "sound not found". `DEFAULT_SOUND` and `AVAILABLE_SOUNDS` in
+  `melody.py` encode that, for the literal pattern and for the agent.
+- **`config.js` is injected, not committed.** `sync-www.mjs` adds the script
+  tag to the copy in `mobile/www`, because `/config.js` does not exist when
+  FastAPI serves the same page in a browser.
+- **CORS is only for the app.** The browser version is same-origin and never
+  reaches the middleware. Add deployment origins through
+  `STRUDEL_ALLOWED_ORIGINS`.

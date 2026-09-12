@@ -18,7 +18,7 @@ and the fix belongs in retrieval.
 `app/backend/core.py`:
 
 ```python
-model = init_chat_model("gpt-4o-mini", model_provider="openai")
+model = init_chat_model("gpt-5.4-mini", model_provider="openai")
 ```
 
 `init_chat_model` is provider-agnostic, so `("claude-sonnet-4-5",

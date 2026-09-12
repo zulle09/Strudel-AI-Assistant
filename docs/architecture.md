@@ -27,8 +27,12 @@ the app freely without touching the index.
 flowchart TD
     B["Browser<br/>app/web/static/app.js"] -->|"POST /api/chat<br/>{message, history}"| S["FastAPI<br/>app/server.py"]
     S --> R["run_llm()<br/>app/backend/core.py"]
-    R --> A["LangChain agent<br/>gpt-4o-mini"]
+    R --> A["LangChain agent<br/>gpt-5.4-mini"]
     A -->|"tool call — may repeat"| T["retrieve_context()"]
+    A -->|"tool call — may repeat"| V["validate_pattern()"]
+    V --> SB["Node sandbox<br/>sandbox/validate.mjs"]
+    SB -->|"VALID / INVALID + error"| V
+    V --> A
     T --> E["EnsembleRetriever<br/>reciprocal rank fusion"]
     E --> BM["BM25<br/>data/chunks.json"]
     E --> PC["Pinecone<br/>strudel-doc-index"]
@@ -61,6 +65,41 @@ Step by step:
 7. **`server.py` renders the markdown to HTML** and de-duplicates the sources.
 8. **The browser decorates the HTML**: every fenced code block becomes a
    playable pattern module.
+
+### The agent loop is ReAct, and the sandbox is what it reacts to
+
+The agent has two tools and is told to use them in a loop rather than once
+each: search the documentation, write a pattern, run it, read the error,
+search for the function it got wrong, fix it, run it again.
+
+That only works because the second tool returns ground truth.
+`validate_pattern` evaluates the candidate in Node with the real Strudel
+engine and reports either what the pattern does or the exact error. An
+undefined function, a mini-notation parse error, a pattern that is silent, a
+General MIDI soundfont this app never loads: all of them come back as text the
+agent can act on.
+
+The alternative was another rule in the system prompt, and that approach was
+visibly running out of road. Every failure mode we found had to be anticipated
+and written down, and the model still produced new ones. A tool that runs the
+code does not need to anticipate anything.
+
+Two properties of the sandbox are load-bearing and easy to break:
+
+- **It never plays audio.** Patterns are *queried*, which is Strudel's own way
+  of asking what events fall between two cycles. That is pure computation, so
+  there is no audio device, no scheduler and no real time involved.
+- **It runs under Node's permission model.** Measured against this sandbox:
+  without `--permission`, evaluated code wrote to `/tmp` and opened sockets
+  successfully. With `--permission --allow-fs-read=sandbox/`, filesystem
+  writes, network and subprocesses are all denied while ordinary patterns
+  still evaluate. The code being run is model output, so those flags in
+  `SANDBOX_FLAGS` are a security control, not a tidiness preference.
+
+Sound names are the one thing a query cannot check, because they resolve when
+audio plays rather than when the pattern is queried. The sandbox therefore
+reports which sounds a pattern asks for and flags `gm_` soundfonts explicitly,
+since those are known not to be loaded.
 
 ### Why retrieval is hybrid
 
