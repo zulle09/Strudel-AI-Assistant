@@ -32,8 +32,26 @@ vectorstore = PineconeVectorStore(
     index_name="strudel-doc-index", embedding=embeddings
 )
 # Provider-agnostic factory: change the string to switch model or vendor.
+#
+# Benchmarked on this app's own melody task (five runs each through the full
+# retrieval pipeline, scoring whether the transcribed melody survives verbatim,
+# `.slow(n)` is kept, no invalid variable assignment appears, and no unloaded
+# soundfont is used):
+#
+#     gpt-5.4-mini   5/5 clean    4.5s
+#     gpt-5.5        5/5 clean   12.6s
+#     gpt-6-astra    5/5 clean   10.1s   (needs the Responses API - see below)
+#     gpt-5.6-sol    5/5 clean   24.3s   (needs the Responses API - see below)
+#     gpt-4o-mini    1/5 clean    5.2s   - dropped `.slow(2)` in four runs
+#
+# gpt-5.4-mini is both the most reliable and the fastest, so the larger models
+# buy nothing here. The newer two reject function tools on the Chat
+# Completions path and must be built as
+# `ChatOpenAI(model=..., use_responses_api=True)`, which returns a list of
+# content blocks rather than a string - run_llm's answer extraction below and
+# server.py's markdown render both assume a string and would need adjusting.
 # Initialize chat model
-model = init_chat_model("gpt-4o-mini", model_provider="openai")
+model = init_chat_model("gpt-5.4-mini", model_provider="openai")
 
 # Chunk dump written by ingestion.py (app/ -> project root -> data/chunks.json).
 CHUNKS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "chunks.json"
