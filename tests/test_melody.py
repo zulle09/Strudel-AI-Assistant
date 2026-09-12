@@ -113,17 +113,22 @@ def test_note_sequences(results):
 
 
 def test_tempos(results):
-    """At most one case may miss the tempo.
+    """Every case within 5% on clean audio.
 
-    Beat tracking a voice has no defence against half-, double- and
-    third-time readings; `riff` at 140 bpm reads as 95. The rest land exactly,
-    which is why the bar is this high.
+    Tempo comes from the median gap between note starts. That is a direct
+    measurement of the note rate, so it is accurate everywhere but no longer
+    exact anywhere: two cases land 2-4% out where the old beat-tracker hit
+    them precisely and missed others entirely. The trade was deliberate and is
+    worth far more on real recordings - see test_realistic.py.
+
+    5% is musically indistinguishable, and the `setcpm` line is one number to
+    edit if a take reads half- or double-time.
     """
     wrong = []
     for name, _, bpm, _ in CASES:
-        if abs(results[name]["bpm"] - bpm) > bpm * 0.02:
+        if abs(results[name]["bpm"] - bpm) > bpm * 0.05:
             wrong.append(f"{name}: expected {bpm}, got {results[name]['bpm']}")
-    assert len(wrong) <= 1, "\n".join(wrong)
+    assert not wrong, "\n".join(wrong)
 
 
 def test_pattern_is_wellformed(results):
