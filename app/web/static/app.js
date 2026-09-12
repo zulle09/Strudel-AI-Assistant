@@ -796,6 +796,250 @@ function renderStart() {
   feed.appendChild(start);
 }
 
+/* ================================= hum ================================= */
+
+/* Record a melody, ship it to /api/hum, get a pattern back.
+ *
+ * The recording is converted to 16 kHz mono WAV in the browser rather than
+ * uploaded as-is. MediaRecorder gives you whatever the engine prefers - webm
+ * on Chrome, AAC in an .m4a on Safari and in the iOS web view - and
+ * libsndfile on the server reads neither. Web Audio decodes all of them, so
+ * decoding here means the server only ever sees one format. It also shrinks
+ * the upload by an order of magnitude, which matters on a phone.
+ */
+
+const recBtn = $("rec");
+const recLabel = $("recLabel");
+const composerHint = $("composerHint");
+
+// The hint line is borrowed to explain the recording while it runs, so the
+// keyboard hint has to be captured before it is overwritten.
+const HINT_DEFAULT = composerHint.textContent;
+
+const UPLOAD_SR = 16000;   // pYIN's ceiling is ~1 kHz; 16k is ample and small
+const MAX_REC_SEC = 30;    // past this the grid fit has more drift than signal
+
+let recorder = null;
+let recStream = null;
+let recChunks = [];
+let recTimer = null;
+let recStarted = 0;
+
+const recordingSupported =
+  typeof MediaRecorder !== "undefined" &&
+  !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+if (!recordingSupported) recBtn.remove();
+
+function setRecState(state, label) {
+  recBtn.dataset.state = state;
+  recLabel.textContent = label;
+  recBtn.disabled = state === "working";
+  sendBtn.disabled = state !== "idle";
+}
+
+/* Float samples -> a 16-bit PCM WAV file. Forty-four bytes of header and a
+   straight quantisation; no library is worth pulling in for this. */
+function encodeWav(samples, sampleRate) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+  const ascii = (offset, text) => {
+    for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i));
+  };
+
+  ascii(0, "RIFF");
+  view.setUint32(4, 36 + samples.length * 2, true);
+  ascii(8, "WAVEfmt ");
+  view.setUint32(16, 16, true);          // PCM header size
+  view.setUint16(20, 1, true);           // format: PCM
+  view.setUint16(22, 1, true);           // channels: mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);  // byte rate
+  view.setUint16(32, 2, true);           // block align
+  view.setUint16(34, 16, true);          // bits per sample
+  ascii(36, "data");
+  view.setUint32(40, samples.length * 2, true);
+
+  for (let i = 0; i < samples.length; i++) {
+    const clamped = Math.max(-1, Math.min(1, samples[i]));
+    // Asymmetric scaling: int16 reaches -32768 but only +32767.
+    view.setInt16(44 + i * 2, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true);
+  }
+  return new Blob([buffer], { type: "audio/wav" });
+}
+
+async function blobToWav(blob) {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  const ctx = new Ctx();
+  try {
+    const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
+
+    // OfflineAudioContext does the downmix and the resample in one pass, and
+    // its resampler is the engine's own - better than anything hand-rolled.
+    const frames = Math.ceil(decoded.duration * UPLOAD_SR);
+    const offline = new OfflineAudioContext(1, frames, UPLOAD_SR);
+    const source = offline.createBufferSource();
+    source.buffer = decoded;
+    source.connect(offline.destination);
+    source.start();
+    const rendered = await offline.startRendering();
+    return encodeWav(rendered.getChannelData(0), UPLOAD_SR);
+  } finally {
+    ctx.close();
+  }
+}
+
+async function startRecording() {
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      // Voice processing is tuned for speech intelligibility and chews up the
+      // steady tone a hum is made of, which is exactly what pitch tracking
+      // needs. Ask for the raw signal.
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    });
+  } catch (err) {
+    addError(
+      err && err.name === "NotAllowedError"
+        ? "Microphone access was declined. Allow it for this site, then try again."
+        : "No microphone available. Check that one is connected and not in use elsewhere."
+    );
+    return;
+  }
+
+  recStream = stream;
+  recChunks = [];
+  recorder = new MediaRecorder(stream);
+  recorder.ondataavailable = (ev) => { if (ev.data.size) recChunks.push(ev.data); };
+  recorder.onstop = handleRecordingStopped;
+  recorder.start();
+
+  recStarted = Date.now();
+  setRecState("recording", "0:00");
+  composerHint.textContent = "Hum a melody · click again to stop";
+
+  recTimer = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - recStarted) / 1000);
+    if (elapsed >= MAX_REC_SEC) { stopRecording(); return; }
+    recLabel.textContent = `0:${String(elapsed).padStart(2, "0")}`;
+  }, 200);
+}
+
+function stopRecording() {
+  clearInterval(recTimer);
+  recTimer = null;
+  if (recorder && recorder.state !== "inactive") recorder.stop();
+  // Releasing the tracks is what turns off the browser's recording indicator
+  // and, on a phone, hands the microphone back to the OS.
+  if (recStream) recStream.getTracks().forEach((track) => track.stop());
+  recStream = null;
+}
+
+async function handleRecordingStopped() {
+  const seconds = (Date.now() - recStarted) / 1000;
+  const blob = new Blob(recChunks, { type: recorder.mimeType || "audio/webm" });
+  recorder = null;
+  recChunks = [];
+  composerHint.textContent = HINT_DEFAULT;
+
+  if (seconds < 1 || !blob.size) {
+    setRecState("idle", "Hum");
+    addError("That was too short to read. Hold the button through a few notes.");
+    return;
+  }
+
+  setRecState("working", "Reading");
+  const start = feed.querySelector(".start");
+  if (start) start.remove();
+  addUser(`Hummed a melody, ${seconds.toFixed(1)}s`);
+  const thinking = addThinking();
+
+  try {
+    const wav = await blobToWav(blob);
+    const body = new FormData();
+    body.append("audio", wav, "hum.wav");
+
+    const res = await fetch("/api/hum", { method: "POST", body });
+    const data = await res.json().catch(() => ({}));
+    thinking.remove();
+
+    if (!res.ok || data.error) {
+      addError(data.error || `The server returned ${res.status}.`, data.trace);
+    } else {
+      addHumAnswer(data);
+      // Only the model's own reply joins the history. The transcription is a
+      // measurement, not something the user said, and putting its numbers in
+      // the transcript would have follow-ups arguing with the tempo.
+      history.push({ role: "user", content: "I hummed a melody for you to turn into a pattern." });
+      if (data.answer_md) history.push({ role: "assistant", content: data.answer_md });
+    }
+  } catch (err) {
+    thinking.remove();
+    addError("Couldn't send the recording. Is the server still running?");
+    console.error(err);
+  } finally {
+    setRecState("idle", "Hum");
+  }
+}
+
+function addHumAnswer(data) {
+  const el = document.createElement("div");
+  el.className = "msg msg--bot";
+
+  const t = data.transcription || {};
+  const stats = document.createElement("p");
+  stats.className = "micro hum__stats";
+  stats.textContent =
+    `Transcribed · ${t.bpm} bpm · ${t.key} · ` +
+    `${t.note_count} notes · confidence ${t.confidence}`;
+  el.appendChild(stats);
+
+  // The literal transcription goes first and always. If the model's version
+  // is wrong or the model leg failed outright, this one still plays back what
+  // was actually hummed, which is the result the user came for.
+  const literal = buildPatch(data.pattern);
+  literal.querySelector(".patch__label").textContent = "As hummed";
+  el.appendChild(literal);
+
+  if (data.warning) {
+    const warn = document.createElement("p");
+    warn.className = "error__message";
+    warn.textContent = `Transcribed, but the assistant couldn't elaborate: ${data.warning}`;
+    el.appendChild(warn);
+  }
+
+  if (data.answer_html) {
+    const prose = document.createElement("div");
+    prose.className = "prose";
+    prose.innerHTML = data.answer_html;
+    decoratePatches(prose);
+    el.appendChild(prose);
+  }
+
+  // Said out loud rather than fixed quietly: the pattern below is not quite
+  // what the model wrote, and a person editing it should know that.
+  if (data.repaired) {
+    const fixed = document.createElement("p");
+    fixed.className = "micro hum__stats";
+    fixed.textContent =
+      `Put back the .slow(${(data.transcription || {}).cycles}) the assistant left out, ` +
+      "which would have played the melody too fast.";
+    el.appendChild(fixed);
+  }
+
+  if (data.sources && data.sources.length) el.appendChild(buildSources(data.sources));
+
+  feed.appendChild(el);
+  scrollDown();
+}
+
+if (recordingSupported) {
+  recBtn.addEventListener("click", () => {
+    if (recBtn.dataset.state === "recording") stopRecording();
+    else if (!inFlight) startRecording();
+  });
+}
+
 initEditor();
 renderStart();
 input.focus();
