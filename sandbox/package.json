@@ -1,0 +1,14 @@
+{
+  "name": "strudel-sandbox",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Evaluates a candidate Strudel pattern so the agent can check its own work.",
+  "dependencies": {
+    "@strudel/core": "^1.2.6",
+    "@strudel/mini": "^1.2.6",
+    "@strudel/tonal": "^1.2.6",
+    "@strudel/transpiler": "^1.2.6",
+    "@kabelsalat/web": "file:./stubs/kabelsalat-web"
+  }
+}

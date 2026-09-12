@@ -31,3 +31,8 @@ data/chunks.json
 mobile/node_modules/
 mobile/www/
 mobile/ios/
+
+# Strudel evaluation sandbox (sandbox/)
+# Installed with `npm install` in sandbox/. The stub package under
+# sandbox/stubs/ IS committed - it works around a broken published dependency.
+sandbox/node_modules/
