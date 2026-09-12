@@ -1,5 +1,7 @@
 import json
 import os
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional, cast
 
@@ -116,6 +118,92 @@ def retrieve_context(query: str):
     return serialized, retrieved_docs
 
 
+# app/backend/ -> app/ -> project root -> sandbox/
+SANDBOX_DIR = Path(__file__).resolve().parent.parent.parent / "sandbox"
+SANDBOX_ENTRY = SANDBOX_DIR / "validate.mjs"
+
+# A query over four cycles is arithmetic; a second is already generous. The
+# ceiling exists for the pattern that loops forever, not for the slow one.
+SANDBOX_TIMEOUT_SEC = 20
+
+# Node's permission model, verified against this sandbox: without these flags
+# evaluated code writes to the filesystem and opens sockets freely, and with
+# them filesystem writes, network and subprocesses are all denied. Read access
+# is granted only to the sandbox directory, which is where its own modules
+# live. See docs/humming.md.
+SANDBOX_FLAGS = ["--permission", f"--allow-fs-read={SANDBOX_DIR}"]
+
+
+@tool
+def validate_pattern(code: str) -> str:
+    """Run a Strudel pattern and report whether it works.
+
+    Use this on every pattern you write, before giving it to the user. It
+    evaluates the code the way the Strudel REPL would and returns either what
+    the pattern does (how many events, which sounds, which notes) or the exact
+    error. If it reports an error or a warning, fix the pattern and validate
+    again. If it says a function is not defined, search the documentation for
+    the right name rather than guessing.
+
+    Args:
+        code: The complete pattern, exactly as you would give it to the user.
+    """
+    if not shutil.which("node"):
+        return (
+            "The validator is unavailable: Node.js is not installed. "
+            "Answer from the documentation alone and say the pattern is unverified."
+        )
+    if not SANDBOX_ENTRY.exists() or not (SANDBOX_DIR / "node_modules").exists():
+        return (
+            "The validator is unavailable: the sandbox is not installed "
+            "(run `npm install` in sandbox/). Answer from the documentation "
+            "alone and say the pattern is unverified."
+        )
+
+    try:
+        finished = subprocess.run(
+            ["node", *SANDBOX_FLAGS, str(SANDBOX_ENTRY)],
+            input=code,
+            capture_output=True,
+            text=True,
+            timeout=SANDBOX_TIMEOUT_SEC,
+            cwd=SANDBOX_DIR,
+        )
+    except subprocess.TimeoutExpired:
+        return (
+            f"The pattern did not finish within {SANDBOX_TIMEOUT_SEC} seconds. "
+            "Something in it loops forever. Simplify it and try again."
+        )
+
+    try:
+        report = json.loads(finished.stdout)
+    except json.JSONDecodeError:
+        # The sandbox writes JSON on stdout and everything else on stderr, so
+        # this means it died before it could report - a crash, not a bad pattern.
+        detail = (finished.stderr or "").strip().splitlines()
+        return "The validator crashed: " + (detail[-1] if detail else "no output.")
+
+    if not report.get("ok"):
+        return (
+            f"INVALID ({report.get('stage', 'unknown')} stage): {report.get('error')}\n"
+            "Fix the pattern and validate it again."
+        )
+
+    lines = [
+        f"VALID. Over {report['cycles_queried']} cycles it produces "
+        f"{report['events']} events."
+    ]
+    if report.get("sounds"):
+        lines.append(f"Sounds used: {', '.join(report['sounds'])}.")
+    if report.get("distinct_notes"):
+        lines.append(f"Distinct notes: {report['distinct_notes']}.")
+    if report.get("cpm") is not None:
+        lines.append(f"Tempo: {report['cpm']} cycles per minute.")
+    for warning in report.get("warnings", []):
+        lines.append(f"WARNING: {warning} Fix this and validate again.")
+    return " ".join(lines)
+
+
 def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
     """
     Run the RAG pipeline to answer a query using retrieved documentation.
@@ -148,6 +236,15 @@ def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> 
         "ground truth for exact syntax, parameter types, and synonyms (e.g. `cutoff`/`ctf`/`lp` are all "
         "synonyms of `lpf`) - trust them over your own prior knowledge of Strudel/TidalCycles, which may "
         "be outdated or refer to a different version.\n\n"
+        "You have two tools and they are meant to be used in a loop, not once "
+        "each. `retrieve_context` is how you learn; `validate_pattern` is how "
+        "you check what you wrote. A typical turn looks like: search the docs, "
+        "write a pattern, validate it, read the error, search for the function "
+        "you got wrong, fix it, validate again. Keep going until it comes back "
+        "VALID with no warnings. Do not present a pattern you have not "
+        "validated, and never argue with the validator - it runs the real "
+        "Strudel engine, so if it says a function does not exist, it does not "
+        "exist, whatever you remember.\n\n"
         "You handle two kinds of requests:\n"
         "- Questions/explanations (\"what does lpf do?\", \"how does mini-notation work?\") -> answer in "
         "prose, citing sources.\n"
@@ -160,6 +257,10 @@ def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> 
         "Rules:\n"
         "- Always call `retrieve_context` before answering any question about Strudel syntax, functions, "
         "or concepts, and before writing or modifying any pattern - never rely on memory alone.\n"
+        "- Always call `validate_pattern` on the complete pattern before you present it, and again after "
+        "every change you make to it. If it reports INVALID or a WARNING, that is not advice - fix it and "
+        "re-validate. Give up only after three failed attempts, and then say plainly what the validator "
+        "reported rather than presenting the broken pattern as if it worked.\n"
         "- If the first retrieval doesn't clearly answer the question, call the tool again with a "
         "rephrased query, a likely function name, or a synonym, before giving up.\n"
         "- Use only functions and syntax that appear in the retrieved documentation, written as valid "
@@ -174,7 +275,9 @@ def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> 
     
     # A fresh agent per call. In production build it once at module level - this
     # rebuilds the graph on every request.
-    agent = create_agent(model, tools=[retrieve_context], system_prompt=system_prompt)
+    agent = create_agent(
+        model, tools=[retrieve_context, validate_pattern], system_prompt=system_prompt
+    )
     
     # Prior turns first (only role/content survive - the UI-only "sources" key
     # main.py stores alongside each message must not leak into the agent
