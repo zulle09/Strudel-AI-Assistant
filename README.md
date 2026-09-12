@@ -73,7 +73,7 @@ app/
 data/chunks.json       # chunk dump that backs BM25
 sandbox/               # Node + real Strudel: evaluates a pattern so the agent can check it
 mobile/                # Capacitor shell: the same web app, as an iOS app
-tests/test_melody.py   # transcription accuracy against synthesised hums
+tests/                 # transcription accuracy on clean and realistic synthesised hums
 ```
 
 ## Documentation

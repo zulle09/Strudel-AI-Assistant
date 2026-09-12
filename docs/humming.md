@@ -49,16 +49,36 @@ grouped. This needs no onset detector, which matters because a legato hum has
 no attack transient to detect.
 
 **Re-articulation.** Pitch runs alone cannot see a repeated note: humming
-"c c" is one unbroken run of the same semitone. Onset detection supplies the
-missing boundary, and a run is cut wherever one fires. `ONSET_DELTA` is
-deliberately high. A missed re-articulation costs one repeated note; a
-spurious one shreds a held note into fragments, which is far more audible.
+"c c" is one unbroken run of the same semitone. Humming the same pitch twice
+means closing and reopening, so the boundary is a dip in loudness rather than
+a change in timbre, and that is what the pipeline looks for: prominent
+valleys in the RMS curve.
 
-**Tempo.** `librosa.beat.beat_track`, octave-folded into 70 to 160 bpm, then
-snapped to a multiple of 5 when it lands within 1.5% of one. An earlier
-version refined this by fitting note onsets to the grid; measured against
-synthesised hums at known tempos it made the estimate worse, because the cost
-is scale-free and the search drifted downwards. It was removed.
+It was spectral-flux onset detection first, and that failed on realistic
+audio. Breath noise dominates the flux, so on a hum with noise and portamento
+it found four of six boundaries in one take and misplaced them in another,
+collapsing every repeated note. Loudness dips find every boundary in every
+take, clean and noisy alike, and the answer does not move across a threefold
+range of `DIP_PROMINENCE`.
+
+**Tempo.** The median gap between note starts, octave-folded into 60 to 180
+bpm, then snapped to a multiple of 5 when it lands within 1.5% of one.
+
+Two earlier approaches were measured and beaten. Fitting onsets to a grid at a
+free tempo is degenerate: the cost is scale-free, so a slower tempo with a
+coarser grid fits just as well and the search drifts downwards. `beat_track`
+is honest but weak on a voice, which never produces the percussive onset
+strength it keys off. The median interval is a direct measurement of the note
+rate rather than an inference from it, and it only became available once
+loudness dips gave accurate boundaries to measure between.
+
+The median matters, not the mean: a melody that ends on a long note or pauses
+for a rest has a few intervals several times the others, and the mean follows
+them.
+
+The bounds matter at the edges. An earlier 70 bpm floor turned a melody
+genuinely hummed at 70 into 138, because measurement noise put it a hair under
+the floor and it was doubled.
 
 **Key.** A duration-weighted pitch-class histogram correlated against the
 Krumhansl-Schmuckler profiles over all 24 rotations. Weighting by duration
@@ -72,20 +92,30 @@ monophonic line, which is what the mini-notation writer assumes.
 
 ### How well it works
 
-Measured on synthesised hums with vibrato, an amplitude envelope and noise,
-across seven melodies spanning 70 to 150 bpm, quarters and eighths:
+There is no ground truth for a recording of a person, so the reference signals
+are synthesised from known melodies. Two suites, because a clean tone proves
+the pipeline works and only a messy one proves it survives a microphone.
 
-| | correct |
-| --- | --- |
-| Key | 7 of 7 |
-| Note sequence | 6 of 7 |
-| Tempo | 6 of 7 |
+`tests/test_melody.py` uses a vibrato sine with an envelope and slight noise.
+`tests/realistic.py` adds portamento, breath noise an order of magnitude
+louder, timing jitter, uneven loudness between notes, room rumble, and a
+singer drifting flat across the take. Seven melodies from 70 to 150 bpm,
+quarters and eighths, three random seeds each on the realistic side.
 
-The tempo failure is a hum at 140 bpm read as 95. Half-, double- and
-third-time readings are inherent to beat tracking a voice, and they are
-survivable: note lengths are quantised against whatever bpm comes out, so the
-relative rhythm is preserved and only the playback speed is wrong. `setcpm` is
-the first line of every generated pattern precisely so it is easy to correct.
+| | clean | realistic |
+| --- | --- | --- |
+| Key | 7 of 7 | 21 of 21 |
+| Note sequence | 7 of 7 | 20 of 21 |
+| Tempo | 7 of 7 within 5% | 21 of 21 within 10% |
+
+The realistic suite is what drove the two design decisions above. Before it,
+the same melodies with breath noise lost every repeated note and got the tempo
+right in 9 takes out of 21.
+
+Half- and double-time readings remain possible and are survivable: note
+lengths are quantised against whatever tempo comes out, so the relative rhythm
+is preserved and only the playback speed is wrong. `setcpm` is the first line
+of every generated pattern precisely so it is one number to correct.
 
 ## Why the browser encodes WAV
 
