@@ -22,4 +22,12 @@ dependencies = [
     "fastapi>=0.141.1",
     "uvicorn>=0.52.4",
     "markdown-it-py>=4.2.0",
+    "librosa>=1.0.0",
+    "soundfile>=0.14.0",
+    "python-multipart>=0.0.32",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
 ]
