@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>StrudelAssistant Signal Chain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Two faceplates for one rack: black anodised (dark, the app's own palette)
+   and brushed aluminium (light). Tokens only; components never name a colour. */
+:root{
+  --ground:#14100D;--ground-2:#1A1512;--panel:#1F1915;--pill:#2A2320;--code-bg:#171310;
+  --text:#EFE6D6;--muted:#B4A99B;--faint:#918779;
+  --edge:rgba(239,230,214,.10);--edge-strong:rgba(239,230,214,.24);
+  --amber:#F2A03D;--amber-wash:rgba(242,160,61,.13);
+  --mint:#7FD1AE;--peak:#E2604A;--area:rgba(239,230,214,.08);
+  --f-label:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --ground:#E4E1DB;--ground-2:#DBD7D0;--panel:#EFEDE8;--pill:#F7F5F1;--code-bg:#E9E6E0;
+    --text:#1D1812;--muted:#4A4239;--faint:#645B51;
+    --edge:rgba(29,24,18,.12);--edge-strong:rgba(29,24,18,.28);
+    --amber:#8C4F06;--amber-wash:rgba(140,79,6,.10);
+    --mint:#17684C;--peak:#B03B26;--area:rgba(29,24,18,.08);
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --ground:#E4E1DB;--ground-2:#DBD7D0;--panel:#EFEDE8;--pill:#F7F5F1;--code-bg:#E9E6E0;
+  --text:#1D1812;--muted:#4A4239;--faint:#645B51;
+  --edge:rgba(29,24,18,.12);--edge-strong:rgba(29,24,18,.28);
+  --amber:#8C4F06;--amber-wash:rgba(140,79,6,.10);
+  --mint:#17684C;--peak:#B03B26;--area:rgba(29,24,18,.08);
+  color-scheme:light;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--text);font:400 15.5px/1.65 var(--f-body)}
+a{color:inherit;text-decoration-color:var(--edge-strong);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--amber)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:2px}
+code{font-family:var(--f-mono);font-size:.87em}
+p code,li code,dd code,td code,figcaption code{background:var(--pill);border:1px solid var(--edge);padding:0 .32em;border-radius:3px;white-space:nowrap}
+
+/* rail: the app's own top bar, reused as the document masthead */
+.rail{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 40px;border-bottom:1px solid var(--edge);background:linear-gradient(180deg,var(--panel),var(--ground-2))}
+.wordmark{font:700 13px/1 var(--f-label);letter-spacing:.22em;text-transform:uppercase}
+.wordmark .tilde{color:var(--amber);letter-spacing:0;margin:0 .4em}
+.wordmark .dim{color:var(--muted)}
+.rail-meta{font:500 12px/1 var(--f-mono);color:var(--faint)}
+
+.shell{display:grid;grid-template-columns:196px minmax(0,1fr);gap:56px;max-width:1300px;margin:0 auto;padding:44px 40px 120px}
+.index{position:sticky;top:28px;align-self:start}
+.index-title{font:600 11px/1 var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 12px 12px}
+.index ol{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+.index a{display:grid;padding:7px 12px;border-radius:4px;text-decoration:none}
+.index a:hover{background:var(--panel)}
+.index .nm{font:600 12.5px/1.25 var(--f-label);letter-spacing:.09em;text-transform:uppercase}
+.index .md{font:400 11px/1.45 var(--f-mono);color:var(--faint)}
+
+main{min-width:0}
+.intro{max-width:780px}
+.label{font:600 11.5px/1 var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+h1{font:700 clamp(34px,4.6vw,50px)/1.04 var(--f-label);letter-spacing:-.012em;margin:14px 0 16px;text-wrap:balance}
+.lede{font-size:18px;line-height:1.55;color:var(--muted);max-width:60ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:18px;font:400 12px/1.4 var(--f-mono);color:var(--faint)}
+.meta b{font-weight:500;color:var(--text)}
+
+.status{list-style:none;padding:0;margin:30px 0 0;display:flex;flex-wrap:wrap;border:1px solid var(--edge);border-radius:5px;background:var(--panel);overflow:hidden}
+.status li{flex:1 1 184px;padding:14px 16px;display:grid;gap:6px;align-content:start;border-right:1px solid var(--edge);border-bottom:1px solid var(--edge);margin:0 -1px -1px 0}
+.status .row{display:flex;align-items:center;gap:9px;font:600 12px/1.2 var(--f-label);letter-spacing:.1em;text-transform:uppercase}
+.lamp{width:9px;height:9px;border-radius:50%;flex:none;background:var(--amber);box-shadow:0 0 0 3px var(--amber-wash)}
+.lamp.off{background:transparent;border:1.5px solid var(--faint);box-shadow:none}
+.status p{margin:0;font-size:13.5px;line-height:1.45;color:var(--muted)}
+
+section{padding-top:72px;scroll-margin-top:12px}
+.sec-head{display:grid;gap:10px;margin-bottom:16px;max-width:780px}
+h2{font:700 30px/1.12 var(--f-label);letter-spacing:-.005em;margin:0;text-wrap:balance}
+h3{font:600 17.5px/1.3 var(--f-label);letter-spacing:.02em;margin:36px 0 8px;text-wrap:balance}
+.prose{max-width:68ch}
+.prose p{margin:0 0 14px}
+.prose p:last-child{margin-bottom:0}
+.note{font-size:13.5px;line-height:1.55;color:var(--muted);max-width:74ch;margin:12px 0 0}
+
+figure{margin:26px 0 6px}
+.fig{background:var(--panel);border:1px solid var(--edge);border-radius:5px;padding:22px;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto}
+.fig.wide svg{min-width:920px}
+.fig.mid svg{min-width:680px}
+.fig.small svg{min-width:540px}
+figcaption{font-size:13.5px;line-height:1.55;color:var(--muted);max-width:76ch;margin-top:10px}
+
+/* inline SVG, themed from the page tokens */
+.sv text{fill:var(--text);font-family:var(--f-body)}
+.sv .tt{font:600 13px var(--f-label);letter-spacing:.02em}
+.sv .tc{font:500 11.5px var(--f-mono)}
+.sv .ts{font:400 10.5px var(--f-mono);fill:var(--muted)}
+.sv .te{font:400 11px var(--f-body);fill:var(--faint)}
+.sv .th{font:600 10.5px var(--f-label);letter-spacing:.16em;fill:var(--faint)}
+.sv .ta{fill:var(--amber)}
+.sv .tr{fill:var(--peak)}
+.sv .box{fill:var(--ground);stroke:var(--edge-strong);stroke-width:1}
+.sv .pill{fill:var(--pill);stroke:var(--edge-strong);stroke-width:1}
+.sv .lit{stroke:var(--amber);stroke-width:1.5}
+.sv .band{fill:none;stroke:var(--edge-strong);stroke-width:1;stroke-dasharray:5 5}
+.sv .band-lit{fill:none;stroke:var(--amber);stroke-width:1.25;stroke-dasharray:6 5}
+.sv .ln{fill:none;stroke:var(--faint);stroke-width:1.25}
+.sv .ln-lit{fill:none;stroke:var(--amber);stroke-width:1.5}
+.sv .ln-deny{fill:none;stroke:var(--peak);stroke-width:1.5}
+.sv .dash{stroke-dasharray:4 4}
+.sv .ah{fill:var(--faint)}
+.sv .ah-lit{fill:var(--amber)}
+.sv .trace{fill:none;stroke:var(--text);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.sv .area{fill:var(--area)}
+.sv .axis{stroke:var(--edge-strong);stroke-width:1}
+.sv .dot{fill:var(--faint)}
+
+.spec{display:grid;grid-template-columns:minmax(140px,200px) minmax(0,1fr);margin:18px 0 0;border-top:1px solid var(--edge);max-width:920px}
+.spec dt,.spec dd{margin:0;padding:10px 0;border-bottom:1px solid var(--edge)}
+.spec dt{font:600 12px/1.55 var(--f-label);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);padding-right:20px}
+.spec dd{font-size:14.5px;line-height:1.55}
+.num{font-family:var(--f-mono);font-size:.92em;color:var(--mint);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.steps{list-style:none;counter-reset:s;margin:16px 0 0;padding:0;max-width:920px;border-top:1px solid var(--edge)}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px minmax(110px,150px) minmax(0,1fr);gap:0 14px;padding:10px 0;border-bottom:1px solid var(--edge);font-size:14.5px;line-height:1.55}
+.steps li::before{content:counter(s,decimal-leading-zero);font:500 12px/1.9 var(--f-mono);color:var(--faint)}
+.steps b{font:600 13px/1.75 var(--f-label);letter-spacing:.08em;text-transform:uppercase}
+
+.chain{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:10px 0}
+.chain li{display:flex;align-items:center}
+.chain .node{background:var(--panel);border:1px solid var(--edge-strong);border-radius:4px;padding:8px 12px;display:grid;gap:2px}
+.chain .node code{background:none;border:0;padding:0;font-size:12.5px;color:var(--text);white-space:nowrap}
+.chain .node span{font-size:12px;line-height:1.3;color:var(--faint)}
+.chain .node.blocked{border-style:dashed}
+.chain li:not(:last-child)::after{content:"→";font-family:var(--f-mono);color:var(--faint);margin:0 9px}
+
+.tbl-wrap{overflow-x:auto;margin:18px 0 0;border:1px solid var(--edge);border-radius:5px;max-width:980px}
+table{border-collapse:collapse;width:100%;min-width:600px;font-size:14px}
+th{font:600 11.5px/1.3 var(--f-label);letter-spacing:.12em;text-transform:uppercase;color:var(--faint);text-align:left;padding:11px 14px;background:var(--panel);border-bottom:1px solid var(--edge)}
+td{padding:11px 14px;border-bottom:1px solid var(--edge);vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pilltag{display:inline-block;margin-left:8px;font:600 10px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--amber);border:1px solid currentColor;border-radius:3px;padding:3px 5px;vertical-align:1px}
+
+pre.code{margin:14px 0 0;background:var(--code-bg);border:1px solid var(--edge);border-radius:5px;padding:14px 16px;overflow-x:auto;font:400 12.8px/1.62 var(--f-mono);color:var(--text)}
+pre.code .c{color:var(--faint)}
+pre.code .s{color:var(--amber)}
+pre.code .n{color:var(--mint)}
+.contracts{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:4px 24px;max-width:1000px}
+.contracts h3{margin-top:26px}
+
+/* step sequencer: the transcription as the 16-step grid sees it */
+.seq{margin:18px 0 0;overflow-x:auto;max-width:980px}
+.seq-inner{min-width:700px}
+.seq-bars{display:grid;grid-template-columns:1fr 1fr;font:600 11px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+.seq-grid{display:grid;grid-template-columns:repeat(32,minmax(0,1fr));height:54px;border:1px solid var(--edge-strong);border-radius:4px;background-color:var(--ground);
+  background-image:linear-gradient(90deg,transparent calc(50% - 1px),var(--muted) calc(50% - 1px),var(--muted) 50%,transparent 50%),linear-gradient(90deg,var(--edge-strong) 1px,transparent 1px),linear-gradient(90deg,var(--edge) 1px,transparent 1px);
+  background-size:100% 100%,calc(100% / 8) 100%,calc(100% / 32) 100%}
+.seq-note{grid-row:1;margin:7px 2px;border-radius:3px;background:var(--amber-wash);border:1px solid var(--amber);color:var(--amber);font:500 12.5px/1 var(--f-mono);display:flex;align-items:center;justify-content:space-between;padding:0 8px;min-width:0}
+.seq-note small{font-size:10.5px;color:var(--faint)}
+.seq-rest{grid-row:1;display:flex;align-items:center;justify-content:center;color:var(--faint);font:500 12.5px/1 var(--f-mono)}
+.seq-ticks{display:grid;grid-template-columns:repeat(8,1fr);margin-top:7px;font:400 10.5px/1 var(--f-mono);color:var(--faint)}
+
+.tape{margin:16px 0 0;border:1px solid var(--edge);border-radius:5px;overflow:hidden;background:var(--code-bg);max-width:980px}
+.tape ol{list-style:none;margin:0;padding:6px 0}
+.tape li{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;padding:7px 16px;font:400 12.8px/1.55 var(--f-mono)}
+.tape .k{font:600 11px/1.95 var(--f-label);letter-spacing:.14em;color:var(--faint)}
+.tape .act .k{color:var(--amber)}
+.tape .v{overflow-wrap:anywhere}
+.tape .warn{color:var(--peak)}
+.tape-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;padding:10px 16px;border-top:1px solid var(--edge);font:400 12px/1.4 var(--f-mono);color:var(--faint);background:var(--panel)}
+
+.traps{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0 36px;margin-top:8px;max-width:1000px}
+.trap{border-top:1px solid var(--edge);padding:16px 0 20px}
+.tag{display:inline-block;font:600 10.5px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);border:1px solid var(--edge-strong);border-radius:3px;padding:4px 6px;margin-bottom:10px}
+.tag.sec{color:var(--peak);border-color:currentColor}
+.trap h4{font:600 15.5px/1.35 var(--f-body);margin:0 0 6px}
+.trap p{margin:0;font-size:14.5px;line-height:1.55;color:var(--muted)}
+
+footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);font-size:13.5px;color:var(--faint);max-width:780px}
+
+@media (max-width:1080px){
+  .shell{grid-template-columns:1fr;gap:10px;padding:28px 20px 96px}
+  .index{position:static}
+  .index-title{margin-left:0}
+  .index ol{display:flex;flex-wrap:wrap;gap:6px}
+  .index a{border:1px solid var(--edge);padding:6px 10px}
+  .index .md{display:none}
+  .rail{padding:12px 20px}
+}
+@media (max-width:640px){
+  body{font-size:15px}
+  h2{font-size:25px}
+  .lede{font-size:16.5px}
+  .fig{padding:14px}
+  .rail-meta{display:none}
+  .spec{grid-template-columns:1fr}
+  .spec dt{border-bottom:0;padding-bottom:0}
+  .steps li{grid-template-columns:30px minmax(0,1fr)}
+  .steps li span{grid-column:2}
+  .contracts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="rail">
+  <div class="wordmark">Strudel<span class="tilde">~</span><span class="dim">Assistant</span></div>
+  <div class="rail-meta">feat/hum-to-pattern · e8c1274</div>
+</header>
+
+<div class="shell">
+  <nav class="index" aria-label="Sections">
+    <p class="index-title">Modules</p>
+    <ol>
+      <li><a href="#system"><span class="nm">System map</span><span class="md">the whole rack</span></a></li>
+      <li><a href="#requests"><span class="nm">Request paths</span><span class="md">server.py</span></a></li>
+      <li><a href="#agent"><span class="nm">Agent loop</span><span class="md">core.py</span></a></li>
+      <li><a href="#retrieval"><span class="nm">Retrieval</span><span class="md">core.py</span></a></li>
+      <li><a href="#transcription"><span class="nm">Transcription</span><span class="md">melody.py</span></a></li>
+      <li><a href="#sandbox"><span class="nm">Sandbox</span><span class="md">sandbox/</span></a></li>
+      <li><a href="#frontend"><span class="nm">Frontend</span><span class="md">app/web</span></a></li>
+      <li><a href="#ios"><span class="nm">iOS shell</span><span class="md">mobile/</span></a></li>
+      <li><a href="#ingestion"><span class="nm">Ingestion</span><span class="md">ingestion.py</span></a></li>
+      <li><a href="#contracts"><span class="nm">Contracts</span><span class="md">JSON shapes</span></a></li>
+      <li><a href="#models"><span class="nm">Model choices</span><span class="md">measured</span></a></li>
+      <li><a href="#invariants"><span class="nm">Invariants</span><span class="md">what breaks</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="intro">
+      <span class="label">Technical architecture</span>
+      <h1>StrudelAssistant Signal Chain</h1>
+      <p class="lede">A documentation assistant for Strudel that answers typed questions and hummed melodies with patterns that play in the page. This is the path a request takes from a text box or a microphone to sound, and every boundary it crosses on the way.</p>
+      <div class="meta">
+        <span>branch <b>feat/hum-to-pattern</b></span>
+        <span>commit <b>e8c1274</b></span>
+        <span><b>~4,400</b> lines of source and tests</span>
+        <span>13 September 2026</span>
+      </div>
+    </div>
+
+    <ul class="status" aria-label="Verification status">
+      <li><div class="row"><span class="lamp" aria-hidden="true"></span>Web app</div><p>Verified end to end in a browser, with synthesized audio.</p></li>
+      <li><div class="row"><span class="lamp" aria-hidden="true"></span>Transcription</div><p>36 tests pass, on clean and on deliberately messy hums.</p></li>
+      <li><div class="row"><span class="lamp" aria-hidden="true"></span>Agent and sandbox</div><p>Seen iterating: a bad sound name was caught and fixed.</p></li>
+      <li><div class="row"><span class="lamp off" aria-hidden="true"></span>Real microphone</div><p>Not yet tested with a human voice.</p></li>
+      <li><div class="row"><span class="lamp off" aria-hidden="true"></span>iOS app</div><p>Scaffolded, never built. Needs Xcode.</p></li>
+    </ul>
+
+    <!-- ============================================================ system -->
+    <section id="system">
+      <div class="sec-head">
+        <span class="label">System map</span>
+        <h2>One server, two ways in, one agent</h2>
+      </div>
+      <div class="prose">
+        <p>At request time there are three things running: a single FastAPI process, a short-lived Node process for each pattern the agent checks, and a web page. Ingestion is a separate program run by hand. It never shares a process with serving, and meets it only through the two indexes it writes.</p>
+      </div>
+
+      <figure>
+        <div class="fig wide">
+          <svg class="sv" viewBox="0 0 1160 710" role="img" aria-label="System map. The browser and the iOS app call one FastAPI server. The chat and hum endpoints converge on one agent loop, which calls OpenAI, a Node sandbox, and a BM25 plus Pinecone index. An offline ingestion program writes the two indexes.">
+            <defs>
+              <marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+            </defs>
+            <text class="th" x="126" y="36" text-anchor="middle">CLIENTS</text>
+            <text class="th" x="384" y="36" text-anchor="middle">SERVER</text>
+            <text class="th" x="672" y="36" text-anchor="middle">ENGINES</text>
+            <text class="th" x="1020" y="36" text-anchor="middle">STORES AND SERVICES</text>
+
+            <rect class="box" x="40" y="64" width="172" height="96" rx="4"/>
+            <text class="tt" x="126" y="98" text-anchor="middle">Browser</text>
+            <text class="ts" x="126" y="118" text-anchor="middle">app/web</text>
+            <text class="ts" x="126" y="136" text-anchor="middle">renders, plays audio</text>
+            <rect class="box" x="40" y="224" width="172" height="96" rx="4"/>
+            <text class="tt" x="126" y="258" text-anchor="middle">iOS app</text>
+            <text class="ts" x="126" y="278" text-anchor="middle">mobile/ · Capacitor</text>
+            <text class="ts" x="126" y="296" text-anchor="middle">same page, WKWebView</text>
+            <path class="ln dash" d="M126 160V221" marker-end="url(#m1)"/>
+            <text class="te" x="134" y="196">copied at sync</text>
+
+            <path class="ln" d="M212 112H283" marker-end="url(#m1)"/>
+            <text class="te" x="248" y="104" text-anchor="middle">same origin</text>
+            <path class="ln" d="M212 272H283" marker-end="url(#m1)"/>
+            <text class="te" x="248" y="264" text-anchor="middle">cross-origin</text>
+
+            <rect class="box" x="286" y="64" width="196" height="356" rx="4"/>
+            <text class="tt" x="384" y="92" text-anchor="middle">FastAPI</text>
+            <text class="ts" x="384" y="110" text-anchor="middle">app/server.py</text>
+            <rect class="pill" x="302" y="130" width="164" height="34" rx="3"/>
+            <text class="tc" x="384" y="151" text-anchor="middle">GET / · /static</text>
+            <rect class="pill" x="302" y="196" width="164" height="34" rx="3"/>
+            <text class="tc" x="384" y="217" text-anchor="middle">POST /api/chat</text>
+            <rect class="pill" x="302" y="322" width="164" height="34" rx="3"/>
+            <text class="tc" x="384" y="343" text-anchor="middle">POST /api/hum</text>
+            <text class="ts" x="384" y="386" text-anchor="middle">CORS allow-list</text>
+            <text class="ts" x="384" y="403" text-anchor="middle">capacitor://localhost</text>
+
+            <path class="ln" d="M466 213H557" marker-end="url(#m1)"/>
+            <text class="te" x="512" y="205" text-anchor="middle">message</text>
+            <path class="ln" d="M466 339H557" marker-end="url(#m1)"/>
+            <text class="te" x="512" y="331" text-anchor="middle">WAV bytes</text>
+
+            <rect class="box lit" x="560" y="64" width="224" height="196" rx="4"/>
+            <text class="tt" x="672" y="92" text-anchor="middle">Agent loop</text>
+            <text class="ts" x="672" y="110" text-anchor="middle">backend/core.py</text>
+            <text class="te" x="672" y="140" text-anchor="middle">search, write, validate, repeat</text>
+            <rect class="pill" x="576" y="160" width="192" height="34" rx="3"/>
+            <text class="tc" x="672" y="181" text-anchor="middle">validate_pattern</text>
+            <rect class="pill" x="576" y="210" width="192" height="34" rx="3"/>
+            <text class="tc" x="672" y="231" text-anchor="middle">retrieve_context</text>
+
+            <rect class="box" x="560" y="300" width="224" height="100" rx="4"/>
+            <text class="tt" x="672" y="328" text-anchor="middle">Transcription</text>
+            <text class="ts" x="672" y="347" text-anchor="middle">backend/melody.py</text>
+            <text class="ts" x="672" y="365" text-anchor="middle">pYIN · RMS dips · grid</text>
+            <path class="ln" d="M672 300V263" marker-end="url(#m1)"/>
+            <text class="te" x="682" y="286">build_prompt()</text>
+
+            <path class="ln" d="M784 94H897" marker-end="url(#m1)"/>
+            <text class="te" x="840" y="86" text-anchor="middle">model calls</text>
+            <path class="ln" d="M768 177H897" marker-end="url(#m1)"/>
+            <text class="te" x="840" y="169" text-anchor="middle">stdin, stdout</text>
+            <path class="ln" d="M768 227H826V272H1084V297" marker-end="url(#m1)"/>
+            <path class="ln" d="M956 272V297" marker-end="url(#m1)"/>
+            <text class="te" x="1020" y="264" text-anchor="middle">top 10 each</text>
+
+            <rect class="box" x="900" y="64" width="240" height="60" rx="4"/>
+            <text class="tt" x="1020" y="90" text-anchor="middle">OpenAI</text>
+            <text class="ts" x="1020" y="110" text-anchor="middle">gpt-5.4-mini · embeddings</text>
+            <rect class="box" x="900" y="140" width="240" height="74" rx="4"/>
+            <text class="tt" x="1020" y="166" text-anchor="middle">Node sandbox</text>
+            <text class="ts" x="1020" y="185" text-anchor="middle">sandbox/validate.mjs</text>
+            <text class="ts" x="1020" y="202" text-anchor="middle">--permission · 20 s cap</text>
+            <rect class="box" x="900" y="300" width="112" height="72" rx="4"/>
+            <text class="tt" x="956" y="326" text-anchor="middle">BM25</text>
+            <text class="ts" x="956" y="345" text-anchor="middle">chunks.json</text>
+            <text class="ts" x="956" y="362" text-anchor="middle">in memory</text>
+            <rect class="box" x="1028" y="300" width="112" height="72" rx="4"/>
+            <text class="tt" x="1084" y="326" text-anchor="middle">Pinecone</text>
+            <text class="ts" x="1084" y="345" text-anchor="middle">1536-d</text>
+            <text class="ts" x="1084" y="362" text-anchor="middle">vectors</text>
+
+            <rect class="band" x="40" y="452" width="1100" height="238" rx="6"/>
+            <text class="th" x="60" y="480">OFFLINE · APP/INGESTION.PY · RUN BY HAND</text>
+            <rect class="box" x="72" y="504" width="210" height="68" rx="4"/>
+            <text class="tt" x="177" y="530" text-anchor="middle">Tavily crawl</text>
+            <text class="ts" x="177" y="548" text-anchor="middle">strudel.cc</text>
+            <text class="ts" x="177" y="564" text-anchor="middle">workshop · learn · recipes</text>
+            <rect class="box" x="72" y="596" width="210" height="68" rx="4"/>
+            <text class="tt" x="177" y="622" text-anchor="middle">Codeberg JSDoc</text>
+            <text class="ts" x="177" y="640" text-anchor="middle">packages/**/*.mjs</text>
+            <text class="ts" x="177" y="656" text-anchor="middle">one doc per function</text>
+            <path class="ln" d="M282 538H350V630H282"/>
+            <path class="ln" d="M350 584H417" marker-end="url(#m1)"/>
+            <text class="te" x="316" y="530" text-anchor="middle">pages</text>
+            <text class="te" x="316" y="648" text-anchor="middle">functions</text>
+            <rect class="box" x="420" y="544" width="240" height="80" rx="4"/>
+            <text class="tt" x="540" y="570" text-anchor="middle">Chunk and id</text>
+            <text class="ts" x="540" y="589" text-anchor="middle">prose split 4000 / 200</text>
+            <text class="ts" x="540" y="606" text-anchor="middle">sha256(source + text)</text>
+            <path class="ln" d="M660 566H956V375" marker-end="url(#m1)"/>
+            <text class="te" x="948" y="424" text-anchor="end">overwrites</text>
+            <path class="ln" d="M660 602H1084V375" marker-end="url(#m1)"/>
+            <text class="te" x="1076" y="424" text-anchor="end">upserts</text>
+          </svg>
+        </div>
+        <figcaption>Both clients run the same page and call the same server; the iOS app is simply the cross-origin one. The hum path joins the chat path at the agent, whose two tools reach a hybrid index and a sandbox. Audio never touches the server: <code>@strudel/web</code> synthesizes it in the page.</figcaption>
+      </figure>
+
+      <h3>Processes, and what each can reach</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Process</th><th>Runtime</th><th>Started by</th><th>Reaches</th></tr></thead>
+          <tbody>
+            <tr><td>Web server</td><td>Python 3.13, FastAPI, uvicorn</td><td><code>uv run python app/server.py</code></td><td>OpenAI, Pinecone, the sandbox</td></tr>
+            <tr><td>Pattern sandbox</td><td>Node, under <code>--permission</code></td><td>Spawned once per validation</td><td>Nothing. File writes, network and subprocesses are denied.</td></tr>
+            <tr><td>Web page</td><td>HTML, CSS, JavaScript, no build step</td><td>Served at <code>/</code></td><td>The server; unpkg for the engine; GitHub for samples</td></tr>
+            <tr><td>iOS app</td><td>Capacitor 7, WKWebView</td><td>Xcode, not yet run</td><td>The server over the local network; the same CDNs</td></tr>
+            <tr><td>Ingestion</td><td>Python 3.13</td><td><code>uv run python app/ingestion.py</code>, by hand</td><td>Tavily, Codeberg, OpenAI, Pinecone</td></tr>
+            <tr><td>Tests</td><td>pytest</td><td><code>uv run pytest</code></td><td>Nothing. All audio is synthesized.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ requests -->
+    <section id="requests">
+      <div class="sec-head">
+        <span class="label">Request paths</span>
+        <h2>The hum path is the chat path with transcription in front</h2>
+      </div>
+      <div class="prose">
+        <p>Both endpoints end at the same agent and render markdown the same way. Everything the hum path adds is deterministic: capture and encoding in the page, transcription and prompt construction on the server, and a repair step behind the model.</p>
+      </div>
+
+      <figure>
+        <div class="fig wide">
+          <svg class="sv" viewBox="0 0 1160 312" role="img" aria-label="Chat and hum request paths. Chat goes composer, POST /api/chat, agent loop, render, response. Hum goes record, encode, POST /api/hum, transcribe, build prompt, the same agent loop, repair, response. A literal pattern branches from transcribe straight to the hum response, bypassing the model.">
+            <defs>
+              <marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+              <marker id="m2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-lit" d="M0 0L10 5L0 10z"/></marker>
+            </defs>
+            <text class="th" x="16" y="26">CHAT</text>
+            <text class="th" x="16" y="158">HUM</text>
+            <path class="ln dash" d="M291 30V244"/>
+            <text class="te" x="284" y="260" text-anchor="end">browser</text>
+            <text class="te" x="298" y="260">server</text>
+
+            <rect class="box" x="16" y="40" width="118" height="58" rx="4"/>
+            <text class="tt" x="75" y="66" text-anchor="middle">Composer</text>
+            <text class="ts" x="75" y="84" text-anchor="middle">typed question</text>
+            <path class="ln" d="M134 69H301" marker-end="url(#m2)"/>
+            <text class="te" x="212" y="61" text-anchor="middle">message, history</text>
+            <rect class="box" x="304" y="40" width="118" height="58" rx="4"/>
+            <text class="tc" x="363" y="66" text-anchor="middle">POST /api/chat</text>
+            <text class="ts" x="363" y="84" text-anchor="middle">JSON body</text>
+            <path class="ln" d="M422 69H733" marker-end="url(#m2)"/>
+            <text class="te" x="577" y="61" text-anchor="middle">run_llm()</text>
+            <path class="ln" d="M854 69H877" marker-end="url(#m2)"/>
+            <rect class="box" x="880" y="40" width="118" height="58" rx="4"/>
+            <text class="tt" x="939" y="66" text-anchor="middle">Render</text>
+            <text class="ts" x="939" y="84" text-anchor="middle">html escaped</text>
+            <path class="ln" d="M998 69H1021" marker-end="url(#m2)"/>
+            <rect class="box" x="1024" y="40" width="118" height="58" rx="4"/>
+            <text class="tt" x="1083" y="66" text-anchor="middle">Response</text>
+            <text class="ts" x="1083" y="84" text-anchor="middle">answer, sources</text>
+
+            <rect class="box" x="16" y="170" width="118" height="58" rx="4"/>
+            <text class="tt" x="75" y="196" text-anchor="middle">Record</text>
+            <text class="ts" x="75" y="214" text-anchor="middle">WebM or MP4</text>
+            <path class="ln" d="M134 199H157" marker-end="url(#m2)"/>
+            <rect class="box" x="160" y="170" width="118" height="58" rx="4"/>
+            <text class="tt" x="219" y="196" text-anchor="middle">Encode</text>
+            <text class="ts" x="219" y="214" text-anchor="middle">16 kHz mono WAV</text>
+            <path class="ln" d="M278 199H301" marker-end="url(#m2)"/>
+            <rect class="box" x="304" y="170" width="118" height="58" rx="4"/>
+            <text class="tc" x="363" y="196" text-anchor="middle">POST /api/hum</text>
+            <text class="ts" x="363" y="214" text-anchor="middle">up to 8 MiB</text>
+            <path class="ln" d="M422 199H445" marker-end="url(#m2)"/>
+            <rect class="box" x="448" y="170" width="118" height="58" rx="4"/>
+            <text class="tc" x="507" y="196" text-anchor="middle">transcribe()</text>
+            <text class="ts" x="507" y="214" text-anchor="middle">notes, bpm, key</text>
+            <path class="ln" d="M566 199H589" marker-end="url(#m2)"/>
+            <rect class="box" x="592" y="170" width="118" height="58" rx="4"/>
+            <text class="tc" x="651" y="196" text-anchor="middle">build_prompt()</text>
+            <text class="ts" x="651" y="214" text-anchor="middle">melody as fact</text>
+            <path class="ln" d="M710 199H733" marker-end="url(#m2)"/>
+            <path class="ln" d="M854 199H877" marker-end="url(#m2)"/>
+            <rect class="box" x="880" y="170" width="118" height="58" rx="4"/>
+            <text class="tt" x="939" y="196" text-anchor="middle">Repair</text>
+            <text class="ts" x="939" y="214" text-anchor="middle">restores .slow(n)</text>
+            <path class="ln" d="M998 199H1021" marker-end="url(#m2)"/>
+            <rect class="box" x="1024" y="170" width="118" height="58" rx="4"/>
+            <text class="tt" x="1083" y="196" text-anchor="middle">Response</text>
+            <text class="ts" x="1083" y="214" text-anchor="middle">two patterns</text>
+
+            <rect class="box lit" x="736" y="40" width="118" height="188" rx="4"/>
+            <text class="tt" x="795" y="128" text-anchor="middle">Agent loop</text>
+            <text class="ts" x="795" y="146" text-anchor="middle">shared</text>
+
+            <path class="ln-lit" d="M507 228V286H1083V232" marker-end="url(#m2a)"/>
+            <text class="te ta" x="795" y="278" text-anchor="middle">to_pattern(): the literal transcription, returned even when the model call fails</text>
+          </svg>
+        </div>
+        <figcaption>The amber branch is the decision that matters most. The literal pattern skips the model entirely, so a failed or rate-limited model call still returns something that plays back what was hummed.</figcaption>
+      </figure>
+
+      <dl class="spec">
+        <dt>Startup</dt><dd><code>core.py</code> builds the BM25 index and opens Pinecone at import, so the server imports it lazily behind a lock and warms it on a background thread. The page loads instantly, and a missing key becomes a readable message in the chat instead of a crash at boot.</dd>
+        <dt>Threads</dt><dd>Both endpoints are plain <code>def</code>, so FastAPI runs them on worker threads while retrieval, the model and transcription block.</dd>
+        <dt>Hum statuses</dt><dd><span class="num">400</span> empty upload · <span class="num">413</span> over 8 MiB · <span class="num">422</span> unusable recording, with a sentence for the singer · <span class="num">200</span> with a <code>warning</code> when only the model leg failed</dd>
+        <dt>Rendering</dt><dd>markdown-it with raw HTML disabled and tables enabled. Answers are derived from crawled third-party text, so model output never becomes markup.</dd>
+        <dt>Debugging</dt><dd><code>STRUDEL_DEBUG=1</code> sends tracebacks to the page as well as the terminal.</dd>
+      </dl>
+    </section>
+
+    <!-- ============================================================ agent -->
+    <section id="agent">
+      <div class="sec-head">
+        <span class="label">Agent loop</span>
+        <h2>A ReAct loop whose observations are ground truth</h2>
+      </div>
+      <div class="prose">
+        <p><code>run_llm()</code> builds a LangChain agent on <code>gpt-5.4-mini</code> with two tools, and a system prompt that tells it to use them in a loop rather than once each. Retrieval is how it learns. The sandbox is how it checks what it wrote, and because it runs the real Strudel engine, its verdict settles questions that prompt rules kept losing.</p>
+      </div>
+
+      <figure>
+        <div class="fig mid">
+          <svg class="sv" viewBox="0 0 640 280" role="img" aria-label="The ReAct loop. Retrieve docs, write a pattern, validate it in the sandbox. Invalid or warning sends it back to rewrite; an undefined function sends it back to search; valid with no warnings exits to the answer.">
+            <defs>
+              <marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+              <marker id="m3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-lit" d="M0 0L10 5L0 10z"/></marker>
+            </defs>
+            <rect class="box" x="40" y="30" width="180" height="60" rx="4"/>
+            <text class="tc" x="130" y="56" text-anchor="middle">retrieve_context</text>
+            <text class="ts" x="130" y="74" text-anchor="middle">docs as observation</text>
+            <rect class="box" x="420" y="30" width="180" height="60" rx="4"/>
+            <text class="tt" x="510" y="56" text-anchor="middle">Write a pattern</text>
+            <text class="ts" x="510" y="74" text-anchor="middle">the model drafts</text>
+            <rect class="box lit" x="420" y="180" width="180" height="60" rx="4"/>
+            <text class="tc" x="510" y="206" text-anchor="middle">validate_pattern</text>
+            <text class="ts" x="510" y="224" text-anchor="middle">sandbox as observation</text>
+            <rect class="box" x="40" y="180" width="180" height="60" rx="4"/>
+            <text class="tt" x="130" y="206" text-anchor="middle">Answer</text>
+            <text class="ts" x="130" y="224" text-anchor="middle">VALID, no warnings</text>
+
+            <path class="ln" d="M220 60H417" marker-end="url(#m3)"/>
+            <text class="te" x="318" y="52" text-anchor="middle">grounded in chunks</text>
+            <path class="ln" d="M490 90V177" marker-end="url(#m3)"/>
+            <text class="te" x="482" y="118" text-anchor="end">every draft</text>
+            <path class="ln-lit" d="M540 180V93" marker-end="url(#m3a)"/>
+            <text class="te ta" x="550" y="130">INVALID or</text>
+            <text class="te ta" x="550" y="145">WARNING: fix</text>
+            <path class="ln" d="M420 222H223" marker-end="url(#m3)"/>
+            <text class="te" x="322" y="214" text-anchor="middle">VALID</text>
+            <path class="ln-lit" d="M444 180V140H130V93" marker-end="url(#m3a)"/>
+            <text class="te ta" x="287" y="132" text-anchor="middle">not defined: search again</text>
+            <text class="te" x="130" y="262" text-anchor="middle">or after 3 failures, reporting them</text>
+          </svg>
+        </div>
+        <figcaption>The loop exits on a clean verdict, or after three failed attempts, in which case the answer says what the validator reported instead of presenting a broken pattern as working.</figcaption>
+      </figure>
+
+      <h3>A recorded trace</h3>
+      <p class="note" style="margin-top:0">Asked for a bassline on <code>gm_acoustic_bass</code>, a soundfont this app never loads.</p>
+      <div class="tape">
+        <ol>
+          <li class="act"><span class="k">ACT</span><span class="v">retrieve_context("Strudel gm_acoustic_bass sound lowpass filter lpf wobble…")</span></li>
+          <li class="act"><span class="k">ACT</span><span class="v">retrieve_context("Strudel bassline note patterns C minor mini-notation…")</span></li>
+          <li><span class="k">OBS</span><span class="v">Reference entries for lpf and note, from controls.mjs</span></li>
+          <li class="act"><span class="k">ACT</span><span class="v">validate_pattern(n("0 3 5 3 0 3 5 7").scale("C:minor").sound("gm_acoustic_bass")…)</span></li>
+          <li><span class="k">OBS</span><span class="v">VALID. 32 events. <span class="warn">WARNING</span>: General MIDI soundfonts are not loaded in this app.</span></li>
+          <li class="act"><span class="k">ACT</span><span class="v">validate_pattern(… .sound("triangle") …)</span></li>
+          <li><span class="k">OBS</span><span class="v">VALID. 32 events. Sounds used: triangle. Distinct notes: 4.</span></li>
+          <li class="act"><span class="k">OUT</span><span class="v">n("0 3 5 3 0 3 5 7").scale("C:minor").sound("triangle").lpf("&lt;300 1200 500 1800&gt;").lpq(10)</span></li>
+        </ol>
+        <div class="tape-foot"><span>2 searches · 2 validations · 1 correction</span><span>7.5 s end to end</span></div>
+      </div>
+
+      <dl class="spec">
+        <dt>Model</dt><dd><code>gpt-5.4-mini</code> through <code>init_chat_model</code>, chosen by benchmark. See <a href="#models">Model choices</a>.</dd>
+        <dt>Lifetime</dt><dd>A fresh agent is built on every request. Cheap at this scale, wasteful at any other.</dd>
+        <dt>Degraded mode</dt><dd>If Node or <code>sandbox/node_modules</code> is missing, the tool says so and the agent answers from documentation alone, flagging the pattern as unverified.</dd>
+        <dt>Latency</dt><dd>About <span class="num">5.7 s</span> for a typed answer and <span class="num">9.6 s</span> for a hummed melody with the sandbox in the loop, each measured once.</dd>
+      </dl>
+    </section>
+
+    <!-- ============================================================ retrieval -->
+    <section id="retrieval">
+      <div class="sec-head">
+        <span class="label">Retrieval</span>
+        <h2>Hybrid search, and a return value the model only half sees</h2>
+      </div>
+      <div class="prose">
+        <p><code>retrieve_context</code> queries a lexical and a semantic index and fuses the two rankings. BM25 catches exact function names that embeddings rank low, and the vector side catches paraphrases. The less obvious part is what the tool hands back.</p>
+      </div>
+
+      <figure>
+        <div class="fig mid">
+          <svg class="sv" viewBox="0 0 920 250" role="img" aria-label="A query fans out to BM25 and Pinecone, ten results each, which are fused by rank. The result forks: text for the model goes into the prompt, while Document objects travel as the tool message artifact and become the sources shown in the page.">
+            <defs>
+              <marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+              <marker id="m4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-lit" d="M0 0L10 5L0 10z"/></marker>
+            </defs>
+            <rect class="box" x="20" y="100" width="110" height="50" rx="4"/>
+            <text class="tt" x="75" y="122" text-anchor="middle">Tool call</text>
+            <text class="ts" x="75" y="139" text-anchor="middle">query string</text>
+            <path class="ln" d="M130 125H160V70H187" marker-end="url(#m4)"/>
+            <path class="ln" d="M160 125V180H187" marker-end="url(#m4)"/>
+            <rect class="box" x="190" y="40" width="170" height="60" rx="4"/>
+            <text class="tt" x="275" y="66" text-anchor="middle">BM25 · k = 10</text>
+            <text class="ts" x="275" y="84" text-anchor="middle">exact names: lpf</text>
+            <rect class="box" x="190" y="150" width="170" height="60" rx="4"/>
+            <text class="tt" x="275" y="176" text-anchor="middle">Pinecone · k = 10</text>
+            <text class="ts" x="275" y="194" text-anchor="middle">paraphrases</text>
+            <path class="ln" d="M360 70H390V115H417" marker-end="url(#m4)"/>
+            <path class="ln" d="M360 180H390V135H417" marker-end="url(#m4)"/>
+            <rect class="box" x="420" y="95" width="170" height="60" rx="4"/>
+            <text class="tt" x="505" y="121" text-anchor="middle">Rank fusion</text>
+            <text class="ts" x="505" y="139" text-anchor="middle">weights 0.5 / 0.5</text>
+            <path class="ln" d="M590 125H640"/>
+            <circle class="dot" cx="640" cy="125" r="4"/>
+            <path class="ln" d="M640 125V62H697" marker-end="url(#m4)"/>
+            <text class="te" x="668" y="54" text-anchor="middle">prompt</text>
+            <path class="ln-lit" d="M640 125V188H697" marker-end="url(#m4a)"/>
+            <text class="te ta" x="668" y="180" text-anchor="middle">artifact</text>
+            <rect class="box" x="700" y="30" width="200" height="64" rx="4"/>
+            <text class="tt" x="800" y="57" text-anchor="middle">Text for the model</text>
+            <text class="ts" x="800" y="76" text-anchor="middle">Source: URL + chunk</text>
+            <rect class="box lit" x="700" y="156" width="200" height="64" rx="4"/>
+            <text class="tt" x="800" y="183" text-anchor="middle">Document objects</text>
+            <text class="ts" x="800" y="202" text-anchor="middle">never enter the prompt</text>
+            <text class="te" x="800" y="242" text-anchor="middle">collected by run_llm(), shown as sources</text>
+          </svg>
+        </div>
+        <figcaption>The tool is declared <code>content_and_artifact</code>, so it returns a pair. The model reads the first half. The second half rides on the tool message, which is how the page cites sources without re-parsing prompt text, and also why the sources panel lists what was retrieved rather than what the answer cited.</figcaption>
+      </figure>
+
+      <dl class="spec">
+        <dt>Lexical</dt><dd>BM25 over <code>data/chunks.json</code>, rebuilt in memory at import, <span class="num">k = 10</span></dd>
+        <dt>Semantic</dt><dd>Pinecone <code>strudel-doc-index</code>, <code>text-embedding-3-small</code>, <span class="num">1536</span> dimensions, <span class="num">k = 10</span></dd>
+        <dt>Fusion</dt><dd><code>EnsembleRetriever</code>, weighted reciprocal rank fusion, <span class="num">0.5 / 0.5</span></dd>
+        <dt>Fallback</dt><dd>Vector-only when <code>chunks.json</code> is missing</dd>
+        <dt>Corpus</dt><dd>Tutorial prose crawled from strudel.cc, plus one reference entry per Strudel function parsed from its JSDoc. The prompt tells the model to trust reference entries over its own memory of the language.</dd>
+      </dl>
+    </section>
+
+    <!-- ============================================================ transcription -->
+    <section id="transcription">
+      <div class="sec-head">
+        <span class="label">Transcription</span>
+        <h2>Signal processing decides the notes; the model never hears audio</h2>
+      </div>
+      <div class="prose">
+        <p>Three OpenAI audio models were given a clean synthetic hum and got the note sequence wrong in all six attempts. So <code>backend/melody.py</code> measures pitch and timing with librosa, and the agent receives facts plus a mini-notation skeleton it is told to keep verbatim.</p>
+      </div>
+
+      <h3>The chain</h3>
+      <ol class="steps">
+        <li><b>Decode</b><span>WAV to mono float32 at <span class="num">22,050 Hz</span>. libsndfile cannot read AAC, which is why the page uploads WAV.</span></li>
+        <li><b>Trim</b><span>Leading and trailing silence more than <span class="num">30 dB</span> below peak.</span></li>
+        <li><b>Pitch</b><span>pYIN between <span class="num">C2</span> and <span class="num">C6</span>, <span class="num">2048</span>-sample frames, <span class="num">256</span>-sample hop, <span class="num">11.6 ms</span> per frame.</span></li>
+        <li><b>Boundaries</b><span>Valleys in RMS loudness with prominence <span class="num">0.15</span>, at least <span class="num">90 ms</span> apart.</span></li>
+        <li><b>Notes</b><span>Semitone runs cut at pitch changes and boundaries. Gaps under <span class="num">60 ms</span> merge, fragments under <span class="num">80 ms</span> drop.</span></li>
+        <li><b>Tempo</b><span>Median gap between note starts, folded into <span class="num">60–180 bpm</span>, snapped to a multiple of 5 within <span class="num">1.5%</span>.</span></li>
+        <li><b>Grid</b><span><span class="num">16</span> steps per cycle and one 4/4 bar per cycle, so <code>cpm = bpm / 4</code>.</span></li>
+        <li><b>Key</b><span>Duration-weighted pitch classes against Krumhansl–Schmuckler profiles, all 24 keys.</span></li>
+        <li><b>Output</b><span>Mini-notation, <code>.slow(cycles)</code> for melodies longer than a bar, and a JSON summary.</span></li>
+      </ol>
+
+      <figure>
+        <div class="fig small">
+          <svg class="sv" viewBox="0 0 760 300" role="img" aria-label="Pitch and loudness over 1.8 seconds for the notes a3, a3, c4. The pitch line is flat across both a3 notes, so pitch alone sees one note. Loudness dips at 0.6 and 1.2 seconds, marking the two boundaries.">
+            <text class="te" x="70" y="100" text-anchor="end">pitch</text>
+            <text class="te" x="70" y="222" text-anchor="end">loudness</text>
+            <line class="axis" x1="80" y1="256" x2="720" y2="256"/>
+            <path class="area" d="M80 256C92 190 110 178 140 178L250 180C270 182 282 222 293 236C304 222 316 180 336 178L466 180C486 182 498 222 507 236C516 222 528 180 548 178L680 180C700 184 712 230 720 256Z"/>
+            <path class="trace" d="M80 256C92 190 110 178 140 178L250 180C270 182 282 222 293 236C304 222 316 180 336 178L466 180C486 182 498 222 507 236C516 222 528 180 548 178L680 180C700 184 712 230 720 256"/>
+            <path class="trace" d="M80 96H498C510 96 512 64 526 64H720"/>
+            <text class="ts" x="186" y="86" text-anchor="middle">a3, one unbroken run</text>
+            <text class="ts" x="623" y="54" text-anchor="middle">c4</text>
+            <text class="ts" x="186" y="212" text-anchor="middle">a3</text>
+            <text class="ts" x="400" y="212" text-anchor="middle">a3</text>
+            <text class="ts" x="614" y="212" text-anchor="middle">c4</text>
+            <line class="ln-lit dash" x1="293" y1="40" x2="293" y2="262"/>
+            <line class="ln-lit dash" x1="507" y1="40" x2="507" y2="262"/>
+            <text class="te ta" x="293" y="30" text-anchor="middle">dip, new note</text>
+            <text class="te ta" x="507" y="30" text-anchor="middle">dip, new note</text>
+            <text class="ts" x="80" y="282">0 s</text>
+            <text class="ts" x="293" y="282" text-anchor="middle">0.6</text>
+            <text class="ts" x="507" y="282" text-anchor="middle">1.2</text>
+            <text class="ts" x="720" y="282" text-anchor="end">1.8 s</text>
+          </svg>
+        </div>
+        <figcaption>Humming the same note twice is one flat pitch line, so pitch tracking alone hears one long a3. Loudness dips where the singer re-articulates, and that valley is the boundary. On a noisy take, spectral onset detection found four of six boundaries; loudness dips found all of them.</figcaption>
+      </figure>
+
+      <h3>What comes out</h3>
+      <p class="note" style="margin-top:0">The test melody at 100 bpm, as the grid sees it. Each column is a sixteenth note.</p>
+      <div class="seq" role="img" aria-label="Step sequencer view of the transcription: c4, c4, g4, g4, a4, a4, g4 each four steps long, then a four-step rest, across two cycles of sixteen steps.">
+        <div class="seq-inner">
+          <div class="seq-bars"><span>Cycle 1</span><span>Cycle 2</span></div>
+          <div class="seq-grid">
+            <span class="seq-note" style="grid-column:1/span 4">c4<small>@4</small></span>
+            <span class="seq-note" style="grid-column:5/span 4">c4<small>@4</small></span>
+            <span class="seq-note" style="grid-column:9/span 4">g4<small>@4</small></span>
+            <span class="seq-note" style="grid-column:13/span 4">g4<small>@4</small></span>
+            <span class="seq-note" style="grid-column:17/span 4">a4<small>@4</small></span>
+            <span class="seq-note" style="grid-column:21/span 4">a4<small>@4</small></span>
+            <span class="seq-note" style="grid-column:25/span 4">g4<small>@4</small></span>
+            <span class="seq-rest" style="grid-column:29/span 4">~@4</span>
+          </div>
+          <div class="seq-ticks"><span>0</span><span>4</span><span>8</span><span>12</span><span>16</span><span>20</span><span>24</span><span>28</span></div>
+        </div>
+      </div>
+<pre class="code">setcpm(<span class="n">25.0</span>)
+note(<span class="s">"c4@4 c4@4 g4@4 g4@4 a4@4 a4@4 g4@4 ~@4"</span>).slow(<span class="n">2</span>).sound(<span class="s">"triangle"</span>)</pre>
+      <p class="note">The literal pattern uses <code>triangle</code> because the page loads only dirt-samples and the built-in synths. <code>piano</code> fails at playback.</p>
+
+      <h3>How well it holds up</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Measure</th><th class="r">Clean hums</th><th class="r">Realistic hums</th></tr></thead>
+          <tbody>
+            <tr><td>Key</td><td class="r"><span class="num">7 of 7</span></td><td class="r"><span class="num">21 of 21</span></td></tr>
+            <tr><td>Note sequence</td><td class="r"><span class="num">7 of 7</span></td><td class="r"><span class="num">20 of 21</span></td></tr>
+            <tr><td>Tempo</td><td class="r"><span class="num">7 of 7</span> within 5%</td><td class="r"><span class="num">21 of 21</span> within 10%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">No recording of a person has ground truth, so reference hums are synthesized from seven known melodies between 70 and 150 bpm. The realistic generator adds portamento, loud breath noise, timing jitter, uneven loudness, room rumble and a singer drifting flat, with three random seeds each. It is the suite that forced loudness-based boundaries and interval-based tempo; before them, the same takes lost every repeated note and got tempo right 9 times in 21.</p>
+    </section>
+
+    <!-- ============================================================ sandbox -->
+    <section id="sandbox">
+      <div class="sec-head">
+        <span class="label">Sandbox</span>
+        <h2>The model's code runs in a process that can touch nothing</h2>
+      </div>
+      <div class="prose">
+        <p><code>sandbox/validate.mjs</code> reads a pattern on stdin, evaluates it with the real Strudel packages, queries four cycles, and writes a JSON verdict on stdout. It never plays audio. Querying is Strudel's own way of asking which events fall between two points in time, so it is pure computation.</p>
+      </div>
+
+      <figure>
+        <div class="fig mid">
+          <svg class="sv" viewBox="0 0 920 340" role="img" aria-label="validate_pattern sends the pattern on stdin into a Node process under the permission model. Inside, evalScope, transpile, stack and queryArc run in sequence and JSON returns on stdout. Writing files, network access and starting processes are all denied at the boundary.">
+            <defs>
+              <marker id="m6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+            </defs>
+            <rect class="box" x="20" y="108" width="190" height="80" rx="4"/>
+            <text class="tc" x="115" y="134" text-anchor="middle">validate_pattern()</text>
+            <text class="ts" x="115" y="153" text-anchor="middle">backend/core.py</text>
+            <text class="ts" x="115" y="170" text-anchor="middle">subprocess, 20 s cap</text>
+            <rect class="band-lit" x="300" y="40" width="600" height="222" rx="6"/>
+            <text class="th ta" x="318" y="66">NODE --PERMISSION · READS SANDBOX/ ONLY</text>
+            <path class="ln" d="M210 132H316" marker-end="url(#m6)"/>
+            <text class="te" x="255" y="124" text-anchor="middle">pattern in</text>
+            <path class="ln" d="M319 160H213" marker-end="url(#m6)"/>
+            <text class="te" x="255" y="178" text-anchor="middle">JSON out</text>
+
+            <rect class="box" x="319" y="110" width="124" height="60" rx="4"/>
+            <text class="tt" x="381" y="136" text-anchor="middle">evalScope</text>
+            <text class="ts" x="381" y="154" text-anchor="middle">core, mini, tonal</text>
+            <path class="ln" d="M443 140H462" marker-end="url(#m6)"/>
+            <rect class="box" x="465" y="110" width="124" height="60" rx="4"/>
+            <text class="tt" x="527" y="136" text-anchor="middle">Transpile</text>
+            <text class="ts" x="527" y="154" text-anchor="middle">$: becomes .p()</text>
+            <path class="ln" d="M589 140H608" marker-end="url(#m6)"/>
+            <rect class="box" x="611" y="110" width="124" height="60" rx="4"/>
+            <text class="tt" x="673" y="136" text-anchor="middle">Stack</text>
+            <text class="ts" x="673" y="154" text-anchor="middle">every $: pattern</text>
+            <path class="ln" d="M735 140H754" marker-end="url(#m6)"/>
+            <rect class="box" x="757" y="110" width="124" height="60" rx="4"/>
+            <text class="tc" x="819" y="136" text-anchor="middle">queryArc(0, 4)</text>
+            <text class="ts" x="819" y="154" text-anchor="middle">events, no audio</text>
+
+            <text class="ts" x="600" y="198" text-anchor="middle">REPL stubs: setcpm, setcps, samples, hush</text>
+            <text class="ts" x="600" y="216" text-anchor="middle">import banner diverted to stderr</text>
+
+            <path class="ln-deny" d="M440 232V286"/>
+            <path class="ln-deny" d="M434 290L446 302M446 290L434 302"/>
+            <text class="te tr" x="440" y="324" text-anchor="middle">write files</text>
+            <path class="ln-deny" d="M600 232V286"/>
+            <path class="ln-deny" d="M594 290L606 302M606 290L594 302"/>
+            <text class="te tr" x="600" y="324" text-anchor="middle">network</text>
+            <path class="ln-deny" d="M760 232V286"/>
+            <path class="ln-deny" d="M754 290L766 302M766 290L754 302"/>
+            <text class="te tr" x="760" y="324" text-anchor="middle">start processes</text>
+          </svg>
+        </div>
+        <figcaption>Measured, not assumed. Without the permission flags, a pattern wrote a file to <code>/tmp</code>. With them, file writes, network access and subprocesses all fail, while ordinary patterns still evaluate.</figcaption>
+      </figure>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Pattern handed to the sandbox</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td><code>note("c4").sound("triangle").frobnicate(3)</code></td><td>Invalid: frobnicate is not a function</td></tr>
+            <tr><td><code>slower = slow(2)</code></td><td>Invalid: slower is not defined</td></tr>
+            <tr><td><code>note("c4@@ [[[")</code></td><td>Invalid: mini-notation parse error, with position</td></tr>
+            <tr><td><code>note("c2 g2").sound("gm_acoustic_bass")</code></td><td>Valid, with a warning that the soundfont is not loaded</td></tr>
+            <tr><td><code>silence</code></td><td>Valid, with a warning that it produces no events</td></tr>
+            <tr><td>A pattern that never returns</td><td>Stopped at <span class="num">20 s</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <dl class="spec">
+        <dt>Dependency stub</dt><dd><code>@strudel/core</code> 1.2.6 imports <code>SalatRepl</code> from a <code>@kabelsalat/web</code> that no longer exports it, in every published version tested. <code>sandbox/stubs</code> supplies the export and throws if audio is ever requested.</dd>
+        <dt><code>$:</code> handling</dt><dd>The real <code>.p()</code> lives in the module that builds the audio engine, so the sandbox reimplements it: collect each pattern, stack them, query the stack.</dd>
+        <dt>Sound names</dt><dd>Resolved at playback, not at query time, so no query can fail on them. The sandbox lists the sounds a pattern asks for and flags <code>gm_</code> soundfonts by name.</dd>
+      </dl>
+    </section>
+
+    <!-- ============================================================ frontend -->
+    <section id="frontend">
+      <div class="sec-head">
+        <span class="label">Frontend</span>
+        <h2>One page, no build step, the real Strudel engine</h2>
+      </div>
+      <div class="prose">
+        <p><code>app/web</code> is hand-written HTML, CSS and JavaScript served straight off disk: <span class="num">103</span>, <span class="num">841</span> and <span class="num">1,063</span> lines. <code>@strudel/web</code> 1.3.0 loads from unpkg, pulls the dirt-samples drum banks from GitHub on first play, and synthesizes in the page.</p>
+      </div>
+
+      <dl class="spec">
+        <dt>Transport</dt><dd>One engine, one active source at a time. The lane in the top rail is driven by <code>scheduler.now()</code>, the engine's own cycle position, not a timer at a guessed tempo.</dd>
+        <dt>Pattern modules</dt><dd><code>decoratePatches()</code> turns every fenced block in an answer into a panel with Play, Edit and Copy.</dd>
+        <dt>Editor</dt><dd>A transparent textarea over a highlighted copy, so caret, selection and undo stay native. <code>⌘/Ctrl+Enter</code> swaps the pattern without stopping playback. Contents and width persist in localStorage.</dd>
+        <dt>Errors</dt><dd>Strudel reports failures as <code>strudel.log</code> events rather than rejected promises. The page listens and shows them in the rail.</dd>
+        <dt>History</dt><dd>The client keeps <code>answer_md</code>, not HTML, so the next turn sends the model its own words.</dd>
+        <dt>API base</dt><dd><code>window.STRUDEL_API_BASE</code>, empty in a browser and set by <code>config.js</code> in the iOS bundle.</dd>
+      </dl>
+
+      <h3>Capturing a hum</h3>
+      <ol class="chain">
+        <li><div class="node"><code>getUserMedia</code><span>voice processing off</span></div></li>
+        <li><div class="node"><code>MediaRecorder</code><span>WebM or MP4, ≤ 30 s</span></div></li>
+        <li><div class="node"><code>decodeAudioData</code><span>any format</span></div></li>
+        <li><div class="node"><code>OfflineAudioContext</code><span>1 channel, 16 kHz</span></div></li>
+        <li><div class="node"><code>encodeWav</code><span>16-bit PCM</span></div></li>
+        <li><div class="node"><code>POST /api/hum</code><span>multipart</span></div></li>
+      </ol>
+      <p class="note">Echo cancellation, noise suppression and gain control are tuned for speech and flatten the steady tone pitch tracking needs, so they are switched off. Decoding in the page means the server sees one format whatever the browser recorded, and the upload shrinks by an order of magnitude.</p>
+
+      <h3>Three screen sizes</h3>
+      <dl class="spec">
+        <dt>≥ 1024 px</dt><dd>Editor docked on the left; the conversation reflows beside it.</dd>
+        <dt>≤ 1023 px</dt><dd>Editor becomes a slide-over.</dd>
+        <dt>≤ 720 px</dt><dd>Compact rail and feed.</dd>
+        <dt>≤ 480 px</dt><dd>The lane hides. The record button keeps its red dot and shows its label only while recording or working.</dd>
+        <dt>Notched phones</dt><dd><code>viewport-fit=cover</code>, with safe-area insets on the rail and the composer.</dd>
+      </dl>
+    </section>
+
+    <!-- ============================================================ ios -->
+    <section id="ios">
+      <div class="sec-head">
+        <span class="label">iOS shell</span>
+        <h2>The same page in a native wrapper, calling your Mac</h2>
+      </div>
+      <div class="prose">
+        <p><code>mobile/</code> is a Capacitor 7 project with no interface of its own. The Python backend cannot run on a phone, so the app serves the page from its bundle and calls the server over the network, which makes it a different origin from the API.</p>
+      </div>
+
+      <h3>Build</h3>
+      <ol class="chain">
+        <li><div class="node"><code>app/web</code><span>the source</span></div></li>
+        <li><div class="node"><code>sync-www.mjs</code><span>copies, writes config.js</span></div></li>
+        <li><div class="node"><code>npx cap add ios</code><span>needs Xcode, CocoaPods</span></div></li>
+        <li><div class="node"><code>configure-ios.mjs</code><span>patches plist, delegate</span></div></li>
+        <li><div class="node blocked"><code>Xcode</code><span>not yet run</span></div></li>
+      </ol>
+
+      <dl class="spec">
+        <dt>Microphone key</dt><dd><code>NSMicrophoneUsageDescription</code>. Without it iOS terminates the app the moment <code>getUserMedia</code> is called.</dd>
+        <dt>Audio session</dt><dd><code>.playAndRecord</code> with <code>.defaultToSpeaker</code>. Otherwise Strudel is silent in silent mode, and moves to the earpiece after the first recording.</dd>
+        <dt>Local network</dt><dd><code>NSAllowsLocalNetworking</code> lets plain http reach the Mac during development. Remove it before shipping.</dd>
+        <dt>Origin</dt><dd>Requests arrive from <code>capacitor://localhost</code>, which the server's CORS allow-list admits. <code>STRUDEL_ALLOWED_ORIGINS</code> adds more.</dd>
+        <dt>Verified</dt><dd>The patcher was run against the real template extracted from <code>@capacitor/cli</code>, is idempotent, and prints a manual snippet if a future template stops matching. Nothing has run on a device.</dd>
+      </dl>
+    </section>
+
+    <!-- ============================================================ ingestion -->
+    <section id="ingestion">
+      <div class="sec-head">
+        <span class="label">Ingestion</span>
+        <h2>An offline program that builds both indexes</h2>
+      </div>
+      <div class="prose">
+        <p>Strudel's function reference is not a crawlable page. The REPL renders it from data generated out of JSDoc comments in the Strudel source, so ingestion combines a crawl of the tutorials with a parse of the source itself. It is long-running and paid, and meant to run once.</p>
+      </div>
+
+      <h3>Tutorial prose</h3>
+      <ol class="chain">
+        <li><div class="node"><code>TavilyCrawl</code><span>strudel.cc, depth 3</span></div></li>
+        <li><div class="node"><code>select_paths</code><span>workshop, learn, recipes</span></div></li>
+        <li><div class="node"><code>Document</code><span>one per page</span></div></li>
+        <li><div class="node"><code>RecursiveCharacterTextSplitter</code><span>4,000 chars, 200 overlap</span></div></li>
+      </ol>
+      <h3>Function reference</h3>
+      <ol class="chain">
+        <li><div class="node"><code>Codeberg tree API</code><span>packages/**/*.mjs</span></div></li>
+        <li><div class="node"><code>raw files</code><span>3 at a time, retry on 429</span></div></li>
+        <li><div class="node"><code>/** … */</code><span>one doc per @name, never split</span></div></li>
+      </ol>
+      <h3>Both, then</h3>
+      <ol class="chain">
+        <li><div class="node"><code>sha256(source + text)</code><span>content-addressed id</span></div></li>
+        <li><div class="node"><code>data/chunks.json</code><span>overwritten</span></div></li>
+        <li><div class="node"><code>Pinecone</code><span>upserted, batches of 500</span></div></li>
+      </ol>
+      <p class="note">Content-addressed ids mean unchanged chunks upsert onto themselves. The flip side is drift: a changed chunk gets a new id, and its old vector stays in Pinecone after <code>chunks.json</code> has forgotten it.</p>
+    </section>
+
+    <!-- ============================================================ contracts -->
+    <section id="contracts">
+      <div class="sec-head">
+        <span class="label">Contracts</span>
+        <h2>What crosses each boundary</h2>
+      </div>
+      <div class="contracts">
+        <div>
+          <h3><code>POST /api/chat</code></h3>
+<pre class="code"><span class="c">// request</span>
+{ "message": <span class="s">"what does lpf do?"</span>,
+  "history": [{ "role": <span class="s">"user"</span>, "content": <span class="s">"…"</span> }] }
+
+<span class="c">// 200</span>
+{ "answer_html": <span class="s">"&lt;p&gt;…&lt;/p&gt;"</span>,
+  "answer_md": <span class="s">"…"</span>,
+  "sources": [<span class="s">"https://strudel.cc/…"</span>] }
+
+<span class="c">// 4xx or 5xx</span>
+{ "error": <span class="s">"a sentence saying what to fix"</span> }</pre>
+        </div>
+        <div>
+          <h3><code>POST /api/hum</code>, field <code>audio</code></h3>
+<pre class="code"><span class="c">// 200</span>
+{ "transcription": { <span class="c">/* below */</span> },
+  "pattern": <span class="s">"setcpm(25.0)\nnote(…).slow(2)…"</span>,
+  "answer_html": <span class="s">"…"</span>,
+  "answer_md": <span class="s">"…"</span>,
+  "repaired": <span class="n">false</span>,
+  "sources": [<span class="s">"…"</span>] }
+
+<span class="c">// model leg failed: answer empty,</span>
+<span class="c">// transcription and pattern still present</span>
+{ …, "warning": <span class="s">"The model API is rate limiting…"</span> }</pre>
+        </div>
+        <div>
+          <h3>Transcription summary</h3>
+<pre class="code">{ "bpm": <span class="n">100.0</span>, "cpm": <span class="n">25.0</span>, "key": <span class="s">"C major"</span>,
+  "cycles": <span class="n">2</span>, "steps_per_cycle": <span class="n">16</span>,
+  "duration_sec": <span class="n">4.25</span>, "note_count": <span class="n">7</span>,
+  "lowest": <span class="s">"c4"</span>, "highest": <span class="s">"a4"</span>,
+  "confidence": <span class="n">0.96</span>,
+  "notes": [{ "note": <span class="s">"c4"</span>, "step": <span class="n">0</span>, "length": <span class="n">4</span> }, …],
+  "mini_notation": <span class="s">"c4@4 c4@4 g4@4 g4@4 a4@4 …"</span> }</pre>
+        </div>
+        <div>
+          <h3>Sandbox verdict, on stdout</h3>
+<pre class="code">{ "ok": <span class="n">true</span>, "cycles_queried": <span class="n">4</span>, "events": <span class="n">4</span>,
+  "cpm": <span class="n">25</span>, "sounds": [<span class="s">"triangle"</span>],
+  "notes": [<span class="s">"c4"</span>, <span class="s">"c4"</span>, <span class="s">"g4"</span>, <span class="s">"g4"</span>],
+  "distinct_notes": <span class="n">2</span>, "warnings": [] }
+
+<span class="c">// or</span>
+{ "ok": <span class="n">false</span>, "stage": <span class="s">"evaluate"</span>,
+  "error": <span class="s">"slower is not defined"</span> }</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ models -->
+    <section id="models">
+      <div class="sec-head">
+        <span class="label">Model choices</span>
+        <h2>Measured on this app's own task</h2>
+      </div>
+      <div class="prose">
+        <p>Five runs each through the full pipeline on the melody prompt. A run counts as clean when the melody survives verbatim, <code>.slow(n)</code> is kept, no variable assignment appears, and no unloaded soundfont is used.</p>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Model</th><th class="r">Clean runs</th><th class="r">Mean time</th></tr></thead>
+          <tbody>
+            <tr><td><code>gpt-5.4-mini</code><span class="pilltag">in use</span></td><td class="r"><span class="num">5 of 5</span></td><td class="r"><span class="num">4.5 s</span></td></tr>
+            <tr><td><code>gpt-6-astra</code></td><td class="r"><span class="num">5 of 5</span></td><td class="r"><span class="num">10.1 s</span></td></tr>
+            <tr><td><code>gpt-5.5</code></td><td class="r"><span class="num">5 of 5</span></td><td class="r"><span class="num">12.6 s</span></td></tr>
+            <tr><td><code>gpt-5.6-sol</code></td><td class="r"><span class="num">5 of 5</span></td><td class="r"><span class="num">24.3 s</span></td></tr>
+            <tr><td><code>gpt-4o-mini</code>, previously</td><td class="r"><span class="num">1 of 5</span></td><td class="r"><span class="num">5.2 s</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">The smallest current model was both the most reliable and the fastest, so the larger ones buy nothing here. <code>gpt-6-astra</code> and <code>gpt-5.6-sol</code> reject function tools on the Chat Completions path and need the Responses API, which returns content blocks the answer extraction does not yet handle. Pricing was not compared. With the sandbox added, even <code>gpt-4o-mini</code> reached 5 of 5, but the validator reported no errors in those runs and the prompt changed at the same time, so that gain is not credited to the sandbox. Audio models were ruled out separately: <code>gpt-audio-1.5</code>, <code>gpt-audio</code> and <code>gpt-audio-mini</code> returned no correct note sequence in six attempts.</p>
+    </section>
+
+    <!-- ============================================================ invariants -->
+    <section id="invariants">
+      <div class="sec-head">
+        <span class="label">Invariants</span>
+        <h2>What breaks quietly if you change it</h2>
+      </div>
+      <div class="traps">
+        <div class="trap"><span class="tag sec">Security</span><h4>The sandbox permission flags</h4><p><code>SANDBOX_FLAGS</code> is the only thing between model-written code and your disk, network and processes. Without them a pattern wrote to <code>/tmp</code>.</p></div>
+        <div class="trap"><span class="tag sec">Security</span><h4>Answer HTML stays escaped</h4><p>markdown-it runs with raw HTML off. Answers derive from crawled third-party text.</p></div>
+        <div class="trap"><span class="tag">Data</span><h4>One embedding model, two files</h4><p><code>ingestion.py</code> and <code>core.py</code> must both use <code>text-embedding-3-small</code>. Changing it means re-indexing and recreating the index at the new dimension.</p></div>
+        <div class="trap"><span class="tag">Data</span><h4>BM25 and Pinecone drift apart</h4><p>The chunk dump is overwritten and Pinecone is upserted. If retrieval surfaces documentation that no longer exists, clear the index and re-ingest.</p></div>
+        <div class="trap"><span class="tag">Coupling</span><h4>The melody expression is shared</h4><p><code>to_pattern</code> and <code>build_prompt</code> both call <code>melody_expression</code>, so the literal pattern and the one the agent must keep cannot disagree.</p></div>
+        <div class="trap"><span class="tag">Coupling</span><h4>One bar per cycle</h4><p><code>STEPS_PER_BEAT</code>, <code>BEATS_PER_CYCLE</code> and <code>cpm = bpm / 4</code> describe one grid. Change one and <code>setcpm</code> stops matching the note lengths.</p></div>
+        <div class="trap"><span class="tag">Coupling</span><h4>Only prebaked sounds exist</h4><p>The page loads dirt-samples and the built-in synths. <code>DEFAULT_SOUND</code>, <code>AVAILABLE_SOUNDS</code> and the validator's <code>gm_</code> warning all encode that.</p></div>
+        <div class="trap"><span class="tag">Coupling</span><h4>Two Strudel versions</h4><p>The page plays with <code>@strudel/web</code> 1.3.0; the sandbox validates with <code>@strudel/core</code> 1.2.6, the newest core published. A function present in only one will be judged by the other.</p></div>
+        <div class="trap"><span class="tag">Runtime</span><h4>The dependency stub is load-bearing</h4><p>Delete <code>sandbox/stubs</code> and <code>@strudel/core</code> stops importing at all.</p></div>
+        <div class="trap"><span class="tag">Runtime</span><h4>Launch path matters</h4><p><code>server.py</code> and <code>core.py</code> import siblings through <code>app/</code> on <code>sys.path</code>. Moving files breaks the imports.</p></div>
+        <div class="trap"><span class="tag">Runtime</span><h4><code>config.js</code> is generated</h4><p><code>sync-www.mjs</code> injects it into the copy. If the source page referenced it, the browser version would 404 on every load.</p></div>
+        <div class="trap"><span class="tag">Licensing</span><h4>AGPL code on a server</h4><p>The sandbox runs Strudel inside a networked service, which is the case the AGPL's network clause addresses. Worth legal review before any deployment.</p></div>
+      </div>
+
+      <footer class="end">Written from the code at commit <code>e8c1274</code>. The repository's <code>docs/architecture.md</code> and <code>docs/humming.md</code> go deeper on retrieval, ingestion and the hum pipeline. What comes next is in the <a href="next-steps.html">StrudelAssistant Setlist</a>.</footer>
+    </section>
+  </main>
+</div>
+</body>
+</html>

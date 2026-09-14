@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>StrudelAssistant Setlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Same rack as the Signal Chain page: black anodised by default, brushed
+   aluminium in light mode. Tokens only; components never name a colour. */
+:root{
+  --ground:#14100D;--ground-2:#1A1512;--panel:#1F1915;--pill:#2A2320;--code-bg:#171310;
+  --text:#EFE6D6;--muted:#B4A99B;--faint:#918779;
+  --edge:rgba(239,230,214,.10);--edge-strong:rgba(239,230,214,.24);
+  --amber:#F2A03D;--amber-wash:rgba(242,160,61,.13);
+  --mint:#7FD1AE;
+  --f-label:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --ground:#E4E1DB;--ground-2:#DBD7D0;--panel:#EFEDE8;--pill:#F7F5F1;--code-bg:#E9E6E0;
+    --text:#1D1812;--muted:#4A4239;--faint:#645B51;
+    --edge:rgba(29,24,18,.12);--edge-strong:rgba(29,24,18,.28);
+    --amber:#8C4F06;--amber-wash:rgba(140,79,6,.10);
+    --mint:#17684C;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --ground:#E4E1DB;--ground-2:#DBD7D0;--panel:#EFEDE8;--pill:#F7F5F1;--code-bg:#E9E6E0;
+  --text:#1D1812;--muted:#4A4239;--faint:#645B51;
+  --edge:rgba(29,24,18,.12);--edge-strong:rgba(29,24,18,.28);
+  --amber:#8C4F06;--amber-wash:rgba(140,79,6,.10);
+  --mint:#17684C;
+  color-scheme:light;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--text);font:400 15.5px/1.65 var(--f-body)}
+a{color:inherit;text-decoration-color:var(--edge-strong);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--amber)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:2px}
+code{font-family:var(--f-mono);font-size:.87em}
+p code,li code,dd code,figcaption code{background:var(--pill);border:1px solid var(--edge);padding:0 .32em;border-radius:3px;white-space:nowrap}
+
+.rail{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 40px;border-bottom:1px solid var(--edge);background:linear-gradient(180deg,var(--panel),var(--ground-2))}
+.wordmark{font:700 13px/1 var(--f-label);letter-spacing:.22em;text-transform:uppercase}
+.wordmark .tilde{color:var(--amber);letter-spacing:0;margin:0 .4em}
+.wordmark .dim{color:var(--muted)}
+.rail-meta{font:500 12px/1 var(--f-mono);color:var(--faint)}
+
+.shell{display:grid;grid-template-columns:196px minmax(0,1fr);gap:56px;max-width:1300px;margin:0 auto;padding:44px 40px 120px}
+.index{position:sticky;top:28px;align-self:start}
+.index-title{font:600 11px/1 var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 12px 12px}
+.index ol{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+.index a{display:grid;padding:7px 12px;border-radius:4px;text-decoration:none}
+.index a:hover{background:var(--panel)}
+.index .nm{font:600 12.5px/1.25 var(--f-label);letter-spacing:.09em;text-transform:uppercase}
+.index .md{font:400 11px/1.45 var(--f-mono);color:var(--faint)}
+
+main{min-width:0}
+.intro{max-width:780px}
+.label{font:600 11.5px/1 var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+h1{font:700 clamp(34px,4.6vw,50px)/1.04 var(--f-label);letter-spacing:-.012em;margin:14px 0 16px;text-wrap:balance}
+.lede{font-size:18px;line-height:1.55;color:var(--muted);max-width:60ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:18px;font:400 12px/1.4 var(--f-mono);color:var(--faint)}
+.meta b{font-weight:500;color:var(--text)}
+
+/* the one lifted object on the page: where to start */
+.lead{margin:32px 0 0;background:var(--panel);border:1px solid var(--amber);border-radius:5px;padding:24px 26px;max-width:980px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 36px}
+.lead h2{font:700 26px/1.15 var(--f-label);margin:10px 0 10px;text-wrap:balance}
+.lead p{margin:0 0 10px;color:var(--muted);font-size:15px}
+.lead ol{margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;display:grid;gap:4px}
+.lead .right{align-self:center}
+.lead pre.code{margin-top:0}
+
+.counts{list-style:none;padding:0;margin:18px 0 0;display:flex;flex-wrap:wrap;border:1px solid var(--edge);border-radius:5px;background:var(--panel);overflow:hidden;max-width:980px}
+.counts li{flex:1 1 170px;padding:12px 16px;border-right:1px solid var(--edge);border-bottom:1px solid var(--edge);margin:0 -1px -1px 0;display:grid;gap:3px}
+.counts a{text-decoration:none;display:grid;gap:3px}
+.counts .h{font:600 12px/1.2 var(--f-label);letter-spacing:.12em;text-transform:uppercase}
+.counts .v{font-size:13.5px;color:var(--muted)}
+.counts .v b{font:500 13px var(--f-mono);color:var(--mint);font-variant-numeric:tabular-nums}
+
+section{padding-top:72px;scroll-margin-top:12px}
+.sec-head{display:grid;gap:10px;margin-bottom:14px;max-width:780px}
+h2{font:700 30px/1.12 var(--f-label);letter-spacing:-.005em;margin:0;text-wrap:balance}
+.prose{max-width:68ch;margin:0}
+.prose p{margin:0 0 14px}
+.note{font-size:13.5px;line-height:1.55;color:var(--muted);max-width:74ch;margin:10px 0 0}
+
+figure{margin:24px 0 6px;max-width:980px}
+.fig{background:var(--panel);border:1px solid var(--edge);border-radius:5px;padding:22px;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:760px}
+figcaption{font-size:13.5px;line-height:1.55;color:var(--muted);max-width:76ch;margin-top:10px}
+
+.sv text{fill:var(--text);font-family:var(--f-body)}
+.sv .tt{font:600 13px var(--f-label);letter-spacing:.02em}
+.sv .ts{font:400 10.5px var(--f-mono);fill:var(--muted)}
+.sv .te{font:400 11px var(--f-body);fill:var(--faint)}
+.sv .box{fill:var(--ground);stroke:var(--edge-strong);stroke-width:1}
+.sv .lit{stroke:var(--amber);stroke-width:1.5}
+.sv .goal{fill:none;stroke:var(--muted);stroke-width:1.25;stroke-dasharray:5 4}
+.sv .ln{fill:none;stroke:var(--faint);stroke-width:1.25}
+.sv .ah{fill:var(--faint)}
+
+/* a step: a row, not a card */
+.steps{max-width:980px;margin-top:8px}
+.step{display:grid;grid-template-columns:132px minmax(0,1fr);gap:0 30px;padding:26px 0;border-top:1px solid var(--edge)}
+.step-meta{display:grid;gap:10px;align-content:start}
+.step-no{font:500 26px/1 var(--f-mono);color:var(--faint);font-variant-numeric:tabular-nums}
+.owner{display:inline-flex;align-items:center;gap:8px;font:600 11.5px/1 var(--f-label);letter-spacing:.12em;text-transform:uppercase}
+.lamp{width:9px;height:9px;border-radius:50%;flex:none;background:var(--amber);box-shadow:0 0 0 3px var(--amber-wash)}
+.lamp.off{background:transparent;border:1.5px solid var(--faint);box-shadow:none}
+.owner.handoff{color:var(--muted)}
+.size{font:400 12px/1.4 var(--f-mono);color:var(--faint)}
+.step h3{font:700 21px/1.2 var(--f-label);letter-spacing:.005em;margin:0 0 8px;text-wrap:balance}
+.step .why{margin:0;max-width:68ch;color:var(--muted)}
+.facts{display:grid;grid-template-columns:minmax(96px,120px) minmax(0,1fr);margin:14px 0 0;max-width:780px}
+.facts dt,.facts dd{margin:0;padding:8px 0;border-top:1px solid var(--edge)}
+.facts dt{font:600 11.5px/1.7 var(--f-label);letter-spacing:.11em;text-transform:uppercase;color:var(--faint);padding-right:16px}
+.facts dd{font-size:14.5px;line-height:1.55}
+.facts dd a{font-family:var(--f-mono);font-size:.92em}
+pre.code{margin:12px 0 0;background:var(--code-bg);border:1px solid var(--edge);border-radius:5px;padding:12px 16px;overflow-x:auto;font:400 12.8px/1.65 var(--f-mono);color:var(--text);max-width:780px}
+pre.code .c{color:var(--faint)}
+.checks{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}
+.checks li{display:grid;grid-template-columns:12px minmax(0,1fr);gap:12px;align-items:baseline}
+.checks li::before{content:"";width:8px;height:8px;border-radius:50%;border:1.5px solid var(--faint);transform:translateY(-1px)}
+
+.ideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0 36px;max-width:1000px;margin-top:8px}
+.idea{border-top:1px solid var(--edge);padding:16px 0 20px}
+.idea h3{font:600 16px/1.35 var(--f-body);margin:0 0 6px}
+.idea p{margin:0;font-size:14.5px;line-height:1.55;color:var(--muted)}
+
+footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);font-size:13.5px;color:var(--faint);max-width:780px}
+
+@media (max-width:1080px){
+  .shell{grid-template-columns:1fr;gap:10px;padding:28px 20px 96px}
+  .index{position:static}
+  .index-title{margin-left:0}
+  .index ol{display:flex;flex-wrap:wrap;gap:6px}
+  .index a{border:1px solid var(--edge);padding:6px 10px}
+  .index .md{display:none}
+  .rail{padding:12px 20px}
+}
+@media (max-width:760px){
+  .lead{grid-template-columns:1fr;padding:20px}
+  .step{grid-template-columns:1fr;gap:12px}
+  .step-meta{grid-template-columns:auto auto 1fr;align-items:center;gap:14px}
+  .step-no{font-size:20px}
+}
+@media (max-width:640px){
+  body{font-size:15px}
+  h2{font-size:25px}
+  .lede{font-size:16.5px}
+  .fig{padding:14px}
+  .rail-meta{display:none}
+  .facts{grid-template-columns:1fr}
+  .facts dt{padding-bottom:0}
+  .facts dd{border-top:0;padding-top:2px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="rail">
+  <div class="wordmark">Strudel<span class="tilde">~</span><span class="dim">Assistant</span></div>
+  <div class="rail-meta">next steps · after e8c1274</div>
+</header>
+
+<div class="shell">
+  <nav class="index" aria-label="Sections">
+    <p class="index-title">Setlist</p>
+    <ol>
+      <li><a href="#start"><span class="nm">Start here</span><span class="md">one test</span></a></li>
+      <li><a href="#path"><span class="nm">Critical path</span><span class="md">what blocks what</span></a></li>
+      <li><a href="#now"><span class="nm">Now</span><span class="md">01–04 · needs you</span></a></li>
+      <li><a href="#next"><span class="nm">Next</span><span class="md">05–14 · hand off</span></a></li>
+      <li><a href="#later"><span class="nm">Later</span><span class="md">15–18 · before sharing</span></a></li>
+      <li><a href="#ideas"><span class="nm">Ideas</span><span class="md">not commitments</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="intro">
+      <span class="label">Next steps</span>
+      <h1>StrudelAssistant Setlist</h1>
+      <p class="lede">What comes after the hum-to-pattern branch, in the order that matters. The first four steps need you in person. Nearly everything after them can be handed off.</p>
+      <div class="meta">
+        <span>follows <b>feat/hum-to-pattern</b> at <b>e8c1274</b></span>
+        <span><b>18</b> steps · <b>4</b> ideas</span>
+        <span>13 September 2026</span>
+      </div>
+    </div>
+
+    <div class="lead" id="start">
+      <div>
+        <span class="label">Start here</span>
+        <h2>Hum into it before anything else</h2>
+        <p>Every transcription number so far comes from synthesized audio. A real voice is the one test that can overturn the tuning, and it takes fifteen minutes.</p>
+        <ol>
+          <li>Open the page in Safari or Chrome. Embedded previews block the microphone.</li>
+          <li>Press the red dot, hum, press it again.</li>
+          <li>Judge the panel labelled <em>As hummed</em> first. It involves no model.</li>
+        </ol>
+      </div>
+      <div class="right">
+<pre class="code">uv run python app/server.py
+<span class="c"># then open http://localhost:8000</span></pre>
+        <p class="note">For each take, note three things: did held notes shatter into repeats, did repeated notes merge into one, and was the tempo right, half or double.</p>
+      </div>
+    </div>
+
+    <ul class="counts" aria-label="Steps by horizon">
+      <li><a href="#now"><span class="h">Now</span><span class="v"><b>4</b> steps, all need you</span></a></li>
+      <li><a href="#next"><span class="h">Next</span><span class="v"><b>10</b> steps to hand off</span></a></li>
+      <li><a href="#later"><span class="h">Later</span><span class="v"><b>4</b> steps before sharing</span></a></li>
+      <li><a href="#ideas"><span class="h">Ideas</span><span class="v"><b>4</b>, not commitments</span></a></li>
+    </ul>
+
+    <!-- ======================================================== critical path -->
+    <section id="path">
+      <div class="sec-head">
+        <span class="label">Critical path</span>
+        <h2>What is blocked by what</h2>
+      </div>
+      <p class="prose">Most engineering steps are independent. These are the chains where order matters, and every one of them starts with something only you can do.</p>
+
+      <figure>
+        <div class="fig">
+          <svg class="sv" viewBox="0 0 900 490" role="img" aria-label="Critical path. Humming with a real voice gives takes for real-audio tests, which then drive tuning. Binding the server to the network simplifies device testing. Building the iOS app leads to testing on a device and then serving over HTTPS, which is required before others can use it. Answering the AGPL question also gates that. Reviewing and merging the branch is the base for every engineering step.">
+            <defs>
+              <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+            </defs>
+
+            <rect class="box lit" x="690" y="46" width="18" height="12" rx="2"/>
+            <text class="te" x="716" y="56">needs you</text>
+            <rect class="box" x="690" y="70" width="18" height="12" rx="2"/>
+            <text class="te" x="716" y="80">can be handed off</text>
+            <rect class="goal" x="690" y="94" width="18" height="12" rx="2"/>
+            <text class="te" x="716" y="104">goal, not a task</text>
+
+            <rect class="box lit" x="30" y="40" width="160" height="56" rx="4"/>
+            <text class="tt" x="110" y="64" text-anchor="middle">Hum with a real voice</text>
+            <text class="ts" x="110" y="82" text-anchor="middle">01 · you · 15 min</text>
+            <path class="ln" d="M190 68H247" marker-end="url(#p1)"/>
+            <text class="te" x="219" y="60" text-anchor="middle">takes</text>
+            <rect class="box" x="250" y="40" width="160" height="56" rx="4"/>
+            <text class="tt" x="330" y="64" text-anchor="middle">Hums as tests</text>
+            <text class="ts" x="330" y="82" text-anchor="middle">06 · small</text>
+            <path class="ln" d="M410 68H467" marker-end="url(#p1)"/>
+            <text class="te" x="439" y="60" text-anchor="middle">then</text>
+            <rect class="box" x="470" y="40" width="160" height="56" rx="4"/>
+            <text class="tt" x="550" y="64" text-anchor="middle">Tune on your takes</text>
+            <text class="ts" x="550" y="82" text-anchor="middle">07 · small to medium</text>
+
+            <rect class="box" x="30" y="136" width="160" height="56" rx="4"/>
+            <text class="tt" x="110" y="160" text-anchor="middle">Bind to the network</text>
+            <text class="ts" x="110" y="178" text-anchor="middle">05 · small</text>
+            <path class="ln" d="M190 164H330V221" marker-end="url(#p1)"/>
+            <text class="te" x="260" y="156" text-anchor="middle">simplifies</text>
+
+            <rect class="box lit" x="30" y="224" width="160" height="56" rx="4"/>
+            <text class="tt" x="110" y="248" text-anchor="middle">Build the iOS app</text>
+            <text class="ts" x="110" y="266" text-anchor="middle">03 · you · afternoon</text>
+            <path class="ln" d="M190 252H247" marker-end="url(#p1)"/>
+            <rect class="box lit" x="250" y="224" width="160" height="56" rx="4"/>
+            <text class="tt" x="330" y="248" text-anchor="middle">Test on a device</text>
+            <text class="ts" x="330" y="266" text-anchor="middle">04 · you · 30 min</text>
+            <path class="ln" d="M410 252H467" marker-end="url(#p1)"/>
+            <rect class="box" x="470" y="224" width="160" height="56" rx="4"/>
+            <text class="tt" x="550" y="248" text-anchor="middle">Serve over HTTPS</text>
+            <text class="ts" x="550" y="266" text-anchor="middle">15 · medium</text>
+            <path class="ln" d="M630 252H687" marker-end="url(#p1)"/>
+            <text class="te" x="659" y="244" text-anchor="middle">required</text>
+            <rect class="goal" x="690" y="224" width="170" height="56" rx="4"/>
+            <text class="tt" x="775" y="248" text-anchor="middle">Let others use it</text>
+            <text class="ts" x="775" y="266" text-anchor="middle">goal</text>
+
+            <rect class="box lit" x="30" y="320" width="160" height="56" rx="4"/>
+            <text class="tt" x="110" y="344" text-anchor="middle">Answer the AGPL question</text>
+            <text class="ts" x="110" y="362" text-anchor="middle">16 · you · legal</text>
+            <path class="ln" d="M190 348H775V283" marker-end="url(#p1)"/>
+            <text class="te" x="480" y="340" text-anchor="middle">gates distribution</text>
+
+            <rect class="box lit" x="30" y="416" width="160" height="56" rx="4"/>
+            <text class="tt" x="110" y="440" text-anchor="middle">Review and merge</text>
+            <text class="ts" x="110" y="458" text-anchor="middle">02 · you · about 1 h</text>
+            <path class="ln" d="M190 444H237" marker-end="url(#p1)"/>
+            <text class="te" x="247" y="448">every engineering step builds on main</text>
+          </svg>
+        </div>
+        <figcaption>Amber outlines need you. Steps not drawn here, 08 to 14 and 17 to 18, are independent and can be picked up in any order once the branch is merged.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ======================================================== now -->
+    <section id="now">
+      <div class="sec-head">
+        <span class="label">Now</span>
+        <h2>Four things only you can do</h2>
+      </div>
+      <p class="prose">Each needs your voice, your judgement, or software this machine does not have.</p>
+
+      <div class="steps">
+        <article class="step" id="s01">
+          <div class="step-meta"><span class="step-no">01</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">15 min</span></div>
+          <div>
+            <h3>Hum into it with a real voice</h3>
+            <p class="why">The transcription was tuned on synthesized hums. The realistic generator is a careful model of a voice, but it is still a model.</p>
+            <dl class="facts">
+              <dt>How</dt><dd>Hum three takes: something slow with repeated notes, something fast, and a tune you know well. The command is in <a href="#start">Start here</a>.</dd>
+              <dt>Done when</dt><dd>For each take you can say whether held notes shattered, whether repeated notes merged, and whether the tempo was right, half or double.</dd>
+              <dt>Unblocks</dt><dd><a href="#s06">06</a> and <a href="#s07">07</a></dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s02">
+          <div class="step-meta"><span class="step-no">02</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">about 1 h</span></div>
+          <div>
+            <h3>Review and merge the branch</h3>
+            <p class="why">Eleven commits of new subsystems sit on <code>feat/hum-to-pattern</code>. Each message explains why, so reading them in order is the fastest way in.</p>
+<pre class="code"><span class="c"># GitHub renamed the repository; pushes work today only through a redirect</span>
+git remote set-url origin git@github.com:zuliani99/Strudel-AI-Assistant.git
+gh pr create --base main --head feat/hum-to-pattern</pre>
+            <dl class="facts">
+              <dt>Done when</dt><dd>The branch is merged into <code>main</code>.</dd>
+              <dt>Unblocks</dt><dd>Every engineering step below.</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s03">
+          <div class="step-meta"><span class="step-no">03</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">an afternoon, mostly download</span></div>
+          <div>
+            <h3>Build the iOS app</h3>
+            <p class="why">The Capacitor shell is scaffolded and its patcher was verified against the real template, but nothing has run on a device. Building needs the full Xcode app, not just the command line tools.</p>
+<pre class="code">brew install cocoapods
+cd mobile &amp;&amp; npm install
+STRUDEL_API_BASE=http://YOUR_MAC_IP:8000 npm run sync
+npx cap add ios
+node configure-ios.mjs
+npx cap open ios</pre>
+            <p class="note">The server binds to localhost only, so for a phone start it this way instead, until <a href="#s05">05</a> makes it a setting:</p>
+<pre class="code">uv run uvicorn server:app --app-dir app --host 0.0.0.0 --port 8000</pre>
+            <dl class="facts">
+              <dt>Done when</dt><dd>The app launches on your phone and shows the page.</dd>
+              <dt>Needs</dt><dd>Xcode from the App Store, and the phone on the same network as the Mac.</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s04">
+          <div class="step-meta"><span class="step-no">04</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">30 min</span></div>
+          <div>
+            <h3>Test it on a device</h3>
+            <p class="why">Five behaviours were written for iOS and can only be seen on real hardware.</p>
+            <ul class="checks">
+              <li>The microphone prompt appears and gives the reason.</li>
+              <li>Patterns still play with the silent switch on.</li>
+              <li>After a recording, sound stays on the loudspeaker instead of moving to the earpiece.</li>
+              <li>The top bar clears the Dynamic Island, and the composer clears the home indicator.</li>
+              <li>The phone reaches the Mac over the local network.</li>
+            </ul>
+            <dl class="facts">
+              <dt>Done when</dt><dd>All five hold, or each failure comes back with what you saw.</dd>
+              <dt>Depends on</dt><dd><a href="#s03">03</a></dd>
+            </dl>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ======================================================== next -->
+    <section id="next">
+      <div class="sec-head">
+        <span class="label">Next</span>
+        <h2>Engineering that can be handed off</h2>
+      </div>
+      <p class="prose">Each is small or medium and testable. They are independent unless a step says otherwise, and ordered by how soon they pay off. Sizes are rough.</p>
+
+      <div class="steps">
+        <article class="step" id="s05">
+          <div class="step-meta"><span class="step-no">05</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Let the server listen on the network</h3>
+            <p class="why"><code>python app/server.py</code> binds <code>127.0.0.1</code>, so a phone cannot reach it without the separate command in <a href="#s03">03</a>. The humming doc's advice to pass <code>--host</code> does not work with that entry point.</p>
+            <dl class="facts">
+              <dt>Done when</dt><dd>A <code>HOST</code> environment variable sets the bind address, defaulting to localhost, and the iOS runbook uses it.</dd>
+              <dt>Helps</dt><dd><a href="#s03">03</a> and <a href="#s04">04</a></dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s06">
+          <div class="step-meta"><span class="step-no">06</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Turn your hums into regression tests</h3>
+            <p class="why">Synthesized audio proves the pipeline works. Only labelled recordings of a voice prove it keeps working for one.</p>
+            <dl class="facts">
+              <dt>How</dt><dd>Save five to ten takes, each with the melody you meant written beside it, as fixtures next to the realistic suite. They are your voice, so keep them in an ignored folder if the repository will be public.</dd>
+              <dt>Done when</dt><dd><code>uv run pytest</code> runs them alongside the existing 36 tests.</dd>
+              <dt>Depends on</dt><dd><a href="#s01">01</a></dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s07">
+          <div class="step-meta"><span class="step-no">07</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small to medium</span></div>
+          <div>
+            <h3>Tune transcription on your takes</h3>
+            <p class="why">The loudness-dip prominence of <span class="size">0.15</span>, the <span class="size">80 ms</span> minimum note and the <span class="size">60–180 bpm</span> tempo window were all set on synthesized audio.</p>
+            <dl class="facts">
+              <dt>Done when</dt><dd>Your recorded fixtures pass, and so do the 36 synthetic tests.</dd>
+              <dt>Depends on</dt><dd><a href="#s06">06</a>, so every change is measured rather than judged by ear</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s08">
+          <div class="step-meta"><span class="step-no">08</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small to medium</span></div>
+          <div>
+            <h3>Align the two Strudel versions</h3>
+            <p class="why">The page plays with <code>@strudel/web</code> 1.3.0, and the sandbox validates with <code>@strudel/core</code> 1.2.6, the newest core on npm. A function that exists in only one of them is judged by the other.</p>
+            <dl class="facts">
+              <dt>How</dt><dd>Find which core release the page's bundle contains. Then pin the page to a release that matches the sandbox, or run the sandbox on the page's own bundle if it will load in Node.</dd>
+              <dt>Done when</dt><dd>Both sides report the same version, and a test fails if they ever diverge.</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s09">
+          <div class="step-meta"><span class="step-no">09</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Check sound names against the real sample list</h3>
+            <p class="why">The validator flags <code>gm_</code> soundfonts by prefix only. An invented drum name passes validation and then plays silence.</p>
+            <dl class="facts">
+              <dt>How</dt><dd>Fetch the dirt-samples sample map once, at install time, and ship it with the sandbox. The sandbox itself has no network, by design, so it cannot fetch the list when it runs.</dd>
+              <dt>Done when</dt><dd>A pattern using <code>sound("bdd")</code> comes back with a warning naming the unknown sound.</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s10">
+          <div class="step-meta"><span class="step-no">10</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Fix tempo in one click</h3>
+            <p class="why">Half- and double-time readings are inherent to hearing a pulse. Correcting one today means editing the <code>setcpm</code> line by hand.</p>
+            <dl class="facts">
+              <dt>How</dt><dd>Add ×2 and ÷2 controls to the As hummed panel that rewrite <code>setcpm</code> and replay.</dd>
+              <dt>Done when</dt><dd>A take read at half tempo can be corrected without typing.</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s11">
+          <div class="step-meta"><span class="step-no">11</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Retry model calls with backoff</h3>
+            <p class="why">Benchmarking tripped OpenAI's rate limit, and every request failed until it cleared. The hum endpoint still returned its transcription; the chat endpoint returned only an error.</p>
+            <dl class="facts">
+              <dt>Done when</dt><dd>A rate-limited call is retried with exponential backoff before anyone sees an error.</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s12">
+          <div class="step-meta"><span class="step-no">12</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Build the agent once</h3>
+            <p class="why"><code>run_llm</code> builds a new agent on every request, rebuilding its graph each time.</p>
+            <dl class="facts">
+              <dt>Done when</dt><dd>One agent is built at startup and reused, with latency measured before and after.</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s13">
+          <div class="step-meta"><span class="step-no">13</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">medium</span></div>
+          <div>
+            <h3>Keep a warm sandbox</h3>
+            <p class="why">Every validation starts Node and imports Strudel from scratch, and a correction loop pays that two or three times per answer.</p>
+            <dl class="facts">
+              <dt>Trade-off</dt><dd>A long-lived worker gives up per-request isolation. Restart it every few dozen patterns and after any timeout, and keep the same permission flags.</dd>
+              <dt>Done when</dt><dd>Validation latency is measured before and after, and the file-write, network and subprocess escapes still fail inside the worker.</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s14">
+          <div class="step-meta"><span class="step-no">14</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Support the Responses API</h3>
+            <p class="why"><code>gpt-6-astra</code> and <code>gpt-5.6-sol</code> reject function tools on Chat Completions, and their replies arrive as content blocks that <code>run_llm</code> and the server treat as strings.</p>
+            <dl class="facts">
+              <dt>Done when</dt><dd>Both run through the full pipeline. Re-benchmark before switching, since neither beat <code>gpt-5.4-mini</code> on this task.</dd>
+            </dl>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ======================================================== later -->
+    <section id="later">
+      <div class="sec-head">
+        <span class="label">Later</span>
+        <h2>Before anyone else uses it</h2>
+      </div>
+      <p class="prose">None of these matter while the app runs on your own machine. All of them matter the day it does not.</p>
+
+      <div class="steps">
+        <article class="step" id="s15">
+          <div class="step-meta"><span class="step-no">15</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">medium</span></div>
+          <div>
+            <h3>Serve the backend over HTTPS</h3>
+            <p class="why">The iOS app reaches your Mac through <code>NSAllowsLocalNetworking</code>, an exception meant only for development.</p>
+            <dl class="facts">
+              <dt>Done when</dt><dd>The backend has a real hostname and certificate, the exception is removed, and <code>STRUDEL_ALLOWED_ORIGINS</code> lists only real origins.</dd>
+              <dt>Depends on</dt><dd><a href="#s04">04</a></dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s16">
+          <div class="step-meta"><span class="step-no">16</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">a conversation with a lawyer</span></div>
+          <div>
+            <h3>Get the AGPL question answered</h3>
+            <p class="why">Strudel is AGPL-3.0. The sandbox runs it inside a networked service, which is the case the licence's network clause addresses, and App Store terms are widely held to conflict with GPL-family licences.</p>
+            <dl class="facts">
+              <dt>Done when</dt><dd>You know what source you must publish, and whether the App Store is viable or TestFlight and the web are the route.</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s17">
+          <div class="step-meta"><span class="step-no">17</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Stop Pinecone drifting from the chunk dump</h3>
+            <p class="why">Ingestion overwrites <code>chunks.json</code> but upserts vectors, so a changed chunk leaves its old vector behind to keep surfacing in results.</p>
+            <dl class="facts">
+              <dt>Done when</dt><dd>Ingestion deletes vector ids that no longer appear in <code>chunks.json</code>.</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="step" id="s18">
+          <div class="step-meta"><span class="step-no">18</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Remove dead dependencies and code</h3>
+            <p class="why"><code>flask</code>, <code>tavily-python</code> and <code>langchain-chroma</code> are declared but unused, and ingestion builds two Tavily tools and an SSL context it never uses.</p>
+            <dl class="facts">
+              <dt>Done when</dt><dd>They are gone, and the server and ingestion both still run.</dd>
+            </dl>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ======================================================== ideas -->
+    <section id="ideas">
+      <div class="sec-head">
+        <span class="label">Ideas</span>
+        <h2>Worth exploring, not yet worth planning</h2>
+      </div>
+      <div class="ideas">
+        <div class="idea"><h3>Spoken instructions</h3><p>Audio models failed at pitch, but transcribing words is what they are good at. Saying "make it darker" is a natural gesture on a phone.</p></div>
+        <div class="idea"><h3>Chords and harmony</h3><p>The pipeline is monophonic. A polyphonic transcriber such as Spotify's basic-pitch could add harmony, if its dependencies install on Python 3.13.</p></div>
+        <div class="idea"><h3>Swing and triplets</h3><p>The grid is straight sixteenth notes, so a shuffle is forced onto the nearest step.</p></div>
+        <div class="idea"><h3>Measure it in use</h3><p>LangSmith tracing is already wired through environment variables, but nothing records latency, tool calls per answer, or how often validation changes the model's pattern.</p></div>
+      </div>
+
+      <footer class="end">Grounded in the code at commit <code>e8c1274</code> and in measurements taken while building the branch. For how the pieces fit together, see the <a href="architecture-overview.html">StrudelAssistant Signal Chain</a>.</footer>
+    </section>
+  </main>
+</div>
+</body>
+</html>
