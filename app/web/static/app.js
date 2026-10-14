@@ -6,17 +6,6 @@
  * real clock rather than an animation at a guessed tempo.
  */
 
-/* Where the API lives.
- *
- * In the browser the page and the API are the same origin, so this is empty
- * and every call stays relative. In the iOS build the page is served from the
- * app bundle at capacitor://localhost while the backend is elsewhere, so
- * mobile/www/config.js sets window.STRUDEL_API_BASE to that backend's URL
- * before this file loads. Nothing else in the app knows the difference.
- */
-const API_BASE = (window.STRUDEL_API_BASE || "").replace(/\/$/, "");
-const api = (path) => API_BASE + path;
-
 const $ = (id) => document.getElementById(id);
 
 const feed = $("feed");
@@ -496,7 +485,7 @@ async function ask(text) {
   const thinking = addThinking();
 
   try {
-    const res = await fetch(api("/api/chat"), {
+    const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text, history }),
@@ -813,10 +802,10 @@ function renderStart() {
  *
  * The recording is converted to 16 kHz mono WAV in the browser rather than
  * uploaded as-is. MediaRecorder gives you whatever the engine prefers - webm
- * on Chrome, AAC in an .m4a on Safari and in the iOS web view - and
+ * on Chrome, AAC in an .m4a on Safari - and
  * libsndfile on the server reads neither. Web Audio decodes all of them, so
  * decoding here means the server only ever sees one format. It also shrinks
- * the upload by an order of magnitude, which matters on a phone.
+ * the upload by an order of magnitude.
  */
 
 const recBtn = $("rec");
@@ -970,7 +959,7 @@ async function handleRecordingStopped() {
     const body = new FormData();
     body.append("audio", wav, "hum.wav");
 
-    const res = await fetch(api("/api/hum"), { method: "POST", body });
+    const res = await fetch("/api/hum", { method: "POST", body });
     const data = await res.json().catch(() => ({}));
     thinking.remove();
 

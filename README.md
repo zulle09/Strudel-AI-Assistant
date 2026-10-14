@@ -72,7 +72,6 @@ app/
     static/app.js      # transport, pattern panels, chat
 data/chunks.json       # chunk dump that backs BM25
 sandbox/               # Node + real Strudel: evaluates a pattern so the agent can check it
-mobile/                # Capacitor shell: the same web app, as an iOS app
 tests/                 # transcription accuracy on clean and realistic synthesised hums
 ```
 
@@ -83,11 +82,11 @@ tests/                 # transcription accuracy on clean and realistic synthesis
 - [docs/extending.md](docs/extending.md) — recipes for changing things: model,
   retrieval, prompt, corpus, interface.
 - [docs/humming.md](docs/humming.md) — the audio-to-pattern pipeline, how
-  accurate it is, and how to build and run the iOS app.
+  accurate it is.
 
 ## Stack
 
-FastAPI + uvicorn serving a vanilla HTML/CSS/JS frontend (no bundler, no build step), managed with [uv](https://docs.astral.sh/uv/). `librosa` for pitch, onset, tempo and key analysis. [Capacitor](https://capacitorjs.com) wraps the same frontend as an iOS app. LangChain for the agent and hybrid retrieval, OpenAI for chat and embeddings, Pinecone for the vector index, Tavily for crawling during ingestion, `markdown-it-py` to render answers server-side, and `@strudel/web` via CDN for audio in the browser.
+FastAPI + uvicorn serving a vanilla HTML/CSS/JS frontend (no bundler, no build step), managed with [uv](https://docs.astral.sh/uv/). `librosa` for pitch, onset, tempo and key analysis. LangChain for the agent and hybrid retrieval, OpenAI for chat and embeddings, Pinecone for the vector index, Tavily for crawling during ingestion, `markdown-it-py` to render answers server-side, and `@strudel/web` via CDN for audio in the browser.
 
 ## License note
 

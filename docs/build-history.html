@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>StrudelAssistant Liner Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Third page in the set with Signal Chain and Setlist: black anodised by
+   default, brushed aluminium in light mode. Tokens only. */
+:root{
+  --ground:#14100D;--ground-2:#1A1512;--panel:#1F1915;--pill:#2A2320;--code-bg:#171310;
+  --text:#EFE6D6;--muted:#B4A99B;--faint:#918779;
+  --edge:rgba(239,230,214,.10);--edge-strong:rgba(239,230,214,.24);
+  --amber:#F2A03D;--amber-wash:rgba(242,160,61,.13);
+  --mint:#7FD1AE;--peak:#E2604A;--peak-wash:rgba(226,96,74,.12);
+  --f-label:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --ground:#E4E1DB;--ground-2:#DBD7D0;--panel:#EFEDE8;--pill:#F7F5F1;--code-bg:#E9E6E0;
+    --text:#1D1812;--muted:#4A4239;--faint:#645B51;
+    --edge:rgba(29,24,18,.12);--edge-strong:rgba(29,24,18,.28);
+    --amber:#8C4F06;--amber-wash:rgba(140,79,6,.10);
+    --mint:#17684C;--peak:#B03B26;--peak-wash:rgba(176,59,38,.09);
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --ground:#E4E1DB;--ground-2:#DBD7D0;--panel:#EFEDE8;--pill:#F7F5F1;--code-bg:#E9E6E0;
+  --text:#1D1812;--muted:#4A4239;--faint:#645B51;
+  --edge:rgba(29,24,18,.12);--edge-strong:rgba(29,24,18,.28);
+  --amber:#8C4F06;--amber-wash:rgba(140,79,6,.10);
+  --mint:#17684C;--peak:#B03B26;--peak-wash:rgba(176,59,38,.09);
+  color-scheme:light;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--text);font:400 15.5px/1.65 var(--f-body)}
+a{color:inherit;text-decoration-color:var(--edge-strong);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--amber)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:2px}
+code{font-family:var(--f-mono);font-size:.87em}
+p code,li code,dd code,td code{background:var(--pill);border:1px solid var(--edge);padding:0 .32em;border-radius:3px;overflow-wrap:anywhere}
+
+.rail{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 40px;border-bottom:1px solid var(--edge);background:linear-gradient(180deg,var(--panel),var(--ground-2))}
+.wordmark{font:700 13px/1 var(--f-label);letter-spacing:.22em;text-transform:uppercase}
+.wordmark .tilde{color:var(--amber);letter-spacing:0;margin:0 .4em}
+.wordmark .dim{color:var(--muted)}
+.rail-meta{font:500 12px/1 var(--f-mono);color:var(--faint)}
+
+.shell{display:grid;grid-template-columns:196px minmax(0,1fr);gap:56px;max-width:1300px;margin:0 auto;padding:44px 40px 120px}
+.index{position:sticky;top:28px;align-self:start;max-height:calc(100vh - 56px);overflow-y:auto}
+.index-title{font:600 11px/1 var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 12px 12px}
+.index ol{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+.index a{display:grid;padding:6px 12px;border-radius:4px;text-decoration:none}
+.index a:hover{background:var(--panel)}
+.index .nm{font:600 12.5px/1.25 var(--f-label);letter-spacing:.08em;text-transform:uppercase}
+.index .nm b{font:500 11.5px var(--f-mono);letter-spacing:0;color:var(--faint);margin-right:6px}
+.index .md{font:400 11px/1.45 var(--f-mono);color:var(--faint)}
+.index .sep{height:1px;background:var(--edge);margin:6px 12px}
+
+main{min-width:0}
+.intro{max-width:780px}
+.label{font:600 11.5px/1 var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+h1{font:700 clamp(34px,4.6vw,50px)/1.04 var(--f-label);letter-spacing:-.012em;margin:14px 0 16px;text-wrap:balance}
+.lede{font-size:18px;line-height:1.55;color:var(--muted);max-width:62ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:18px;font:400 12px/1.4 var(--f-mono);color:var(--faint)}
+.meta b{font-weight:500;color:var(--text)}
+.sources{font-size:13.5px;line-height:1.55;color:var(--muted);max-width:74ch;margin:16px 0 0}
+
+/* the lane: one group per day with commits, the pause drawn as a gap */
+.lane-block{margin-top:34px;max-width:1000px}
+.lane-block .label{color:var(--faint)}
+.lane-wrap{margin-top:12px;overflow-x:auto;border:1px solid var(--edge);border-radius:5px;background:var(--panel)}
+.lane{list-style:none;margin:0;padding:0;display:flex;min-width:900px}
+.day{display:grid;align-content:start;gap:10px;padding:14px 14px 16px;border-right:1px solid var(--edge)}
+.day:last-child{border-right:0}
+.day.wide{flex:1 1 0;min-width:330px}
+.day .d{font:500 12px/1 var(--f-mono);color:var(--muted);white-space:nowrap}
+.day .n{font:400 11px/1 var(--f-mono);color:var(--faint);white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:baseline;gap:6px;padding:5px 8px;border:1px solid var(--edge-strong);border-radius:3px;background:var(--ground);text-decoration:none;white-space:nowrap}
+.chip b{font:500 11px var(--f-mono);color:var(--amber)}
+.chip span{font:600 11.5px/1 var(--f-label);letter-spacing:.06em;text-transform:uppercase}
+.chip:hover{border-color:var(--amber)}
+.chip.cont{border-style:dashed;background:transparent}
+.day.gap{background-image:repeating-linear-gradient(135deg,transparent 0 7px,var(--edge) 7px 8px);min-width:128px;align-content:center;justify-items:center;text-align:center}
+.lane-note{font-size:13px;line-height:1.5;color:var(--faint);margin:8px 0 0}
+
+/* a phase: a row in the log, not a card */
+.era{display:flex;align-items:baseline;gap:14px;margin:80px 0 0;max-width:1000px}
+.era span{font:600 11.5px/1 var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.era::after{content:"";flex:1;height:1px;background:var(--edge-strong)}
+.phase{padding-top:46px;scroll-margin-top:12px;max-width:1000px}
+.ph-head{display:grid;grid-template-columns:62px minmax(0,1fr);gap:0 18px;align-items:start}
+.ph-no{font:500 34px/1 var(--f-mono);color:var(--faint);font-variant-numeric:tabular-nums;padding-top:4px}
+.ph-when{font:400 12px/1.4 var(--f-mono);color:var(--faint);margin:0 0 8px}
+.ph-when b{font-weight:500;color:var(--muted)}
+h2{font:700 28px/1.14 var(--f-label);letter-spacing:-.004em;margin:0;text-wrap:balance}
+.ph-body{margin-left:80px}
+.facts{display:grid;grid-template-columns:minmax(84px,104px) minmax(0,1fr);margin:16px 0 0;max-width:860px}
+.facts dt,.facts dd{margin:0;padding:8px 0;border-top:1px solid var(--edge)}
+.facts dt{font:600 11.5px/1.75 var(--f-label);letter-spacing:.11em;text-transform:uppercase;color:var(--faint);padding-right:16px}
+.facts dd{font-size:14.5px;line-height:1.55}
+.commits{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.commits li{display:grid;grid-template-columns:66px minmax(0,1fr);gap:10px;font-size:13.5px;line-height:1.5}
+.commits code{background:none;border:0;padding:0;color:var(--amber);font-size:12.5px}
+.commits .branch{color:var(--faint)}
+.prose{max-width:68ch;margin-top:16px}
+.prose p{margin:0 0 13px}
+.prose p:last-child{margin-bottom:0}
+h3{font:600 12px/1.2 var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:26px 0 0}
+ul.plain{margin:10px 0 0;padding-left:20px;max-width:68ch;display:grid;gap:5px}
+
+.tbl-wrap{overflow-x:auto;margin:10px 0 0;border:1px solid var(--edge);border-radius:5px;max-width:920px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+th{font:600 11.5px/1.3 var(--f-label);letter-spacing:.12em;text-transform:uppercase;color:var(--faint);text-align:left;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--edge)}
+td{padding:10px 14px;border-bottom:1px solid var(--edge);vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.corr td:first-child{width:28%}
+table.corr td:nth-child(2){width:40%}
+.hit{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--peak);margin-right:8px;transform:translateY(-1px)}
+.num{font-family:var(--f-mono);font-size:.93em;color:var(--mint);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pilltag{display:inline-block;margin-left:8px;font:600 10px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--amber);border:1px solid currentColor;border-radius:3px;padding:3px 5px;vertical-align:1px}
+
+.callout{margin:18px 0 0;max-width:860px;border:1px solid var(--edge-strong);border-radius:5px;padding:12px 16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:baseline;font-size:14.5px;line-height:1.55}
+.callout p{margin:0}
+.tag{display:inline-block;font:600 10.5px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);border:1px solid var(--edge-strong);border-radius:3px;padding:4px 6px;white-space:nowrap}
+.callout.warn{border-color:var(--amber);background:var(--amber-wash)}
+.callout.warn .tag{color:var(--amber);border-color:currentColor}
+.callout.sec{border-color:var(--peak);background:var(--peak-wash)}
+.callout.sec .tag{color:var(--peak);border-color:currentColor}
+
+.pause{margin:60px 0 0;max-width:1000px;border:1px dashed var(--edge-strong);border-radius:5px;padding:18px 20px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;background-image:repeating-linear-gradient(135deg,transparent 0 9px,var(--edge) 9px 10px)}
+.pause .d{font:500 13px var(--f-mono);color:var(--muted)}
+.pause p{margin:0;font-size:14.5px;color:var(--muted)}
+
+.standing{padding-top:80px;scroll-margin-top:12px;max-width:1000px}
+.standing h2{margin:10px 0 0}
+.state{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0 32px;margin-top:14px}
+.state div{border-top:1px solid var(--edge);padding:14px 0 16px}
+.state h4{display:flex;align-items:center;gap:9px;font:600 12px/1.2 var(--f-label);letter-spacing:.12em;text-transform:uppercase;margin:0 0 8px}
+.lamp{width:9px;height:9px;border-radius:50%;flex:none;background:var(--amber);box-shadow:0 0 0 3px var(--amber-wash)}
+.lamp.off{background:transparent;border:1.5px solid var(--faint);box-shadow:none}
+.state ul{margin:0;padding-left:18px;display:grid;gap:5px;font-size:14.5px;color:var(--muted)}
+
+footer.end{margin-top:70px;padding-top:18px;border-top:1px solid var(--edge);font-size:13.5px;color:var(--faint);max-width:780px}
+
+@media (max-width:1080px){
+  .shell{grid-template-columns:1fr;gap:10px;padding:28px 20px 96px}
+  .index{position:static;max-height:none}
+  .index-title{margin-left:0}
+  .index ol{display:flex;flex-wrap:wrap;gap:6px}
+  .index a{border:1px solid var(--edge);padding:6px 10px}
+  .index .md,.index .sep{display:none}
+  .rail{padding:12px 20px}
+}
+@media (max-width:760px){
+  .ph-head{grid-template-columns:1fr;gap:6px}
+  .ph-no{font-size:22px;padding-top:0}
+  .ph-body{margin-left:0}
+}
+@media (max-width:640px){
+  body{font-size:15px}
+  h2{font-size:24px}
+  .lede{font-size:16.5px}
+  .rail-meta{display:none}
+  .facts{grid-template-columns:1fr}
+  .facts dt{padding-bottom:0}
+  .facts dd{border-top:0;padding-top:2px}
+  .callout{grid-template-columns:1fr}
+  .commits li{grid-template-columns:1fr;gap:0}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="rail">
+  <div class="wordmark">Strudel<span class="tilde">~</span><span class="dim">Assistant</span></div>
+  <div class="rail-meta">build history · to 8b775fc</div>
+</header>
+
+<div class="shell">
+  <nav class="index" aria-label="Phases">
+    <p class="index-title">Phases</p>
+    <ol>
+      <li><a href="#timeline"><span class="nm">Timeline</span><span class="md">at a glance</span></a></li>
+      <li class="sep" aria-hidden="true"></li>
+      <li><a href="#p01"><span class="nm"><b>01</b>RAG demo</span><span class="md">26 Aug</span></a></li>
+      <li><a href="#p02"><span class="nm"><b>02</b>Hybrid search</span><span class="md">26 Aug</span></a></li>
+      <li><a href="#p03"><span class="nm"><b>03</b>Interface</span><span class="md">26–27 Aug</span></a></li>
+      <li><a href="#p04"><span class="nm"><b>04</b>The question</span><span class="md">12 Sep</span></a></li>
+      <li><a href="#p05"><span class="nm"><b>05</b>Transcription</span><span class="md">12 Sep</span></a></li>
+      <li><a href="#p06"><span class="nm"><b>06</b>Recording</span><span class="md">12 Sep</span></a></li>
+      <li><a href="#p07"><span class="nm"><b>07</b>iOS shell</span><span class="md">12 Sep</span></a></li>
+      <li><a href="#p08"><span class="nm"><b>08</b>Models</span><span class="md">12 Sep</span></a></li>
+      <li><a href="#p09"><span class="nm"><b>09</b>Sandbox</span><span class="md">12 Sep</span></a></li>
+      <li><a href="#p10"><span class="nm"><b>10</b>Commits</span><span class="md">12 Sep</span></a></li>
+      <li><a href="#p11"><span class="nm"><b>11</b>Real voice</span><span class="md">12 Sep</span></a></li>
+      <li><a href="#p12"><span class="nm"><b>12</b>Docs</span><span class="md">13–14 Sep</span></a></li>
+      <li class="sep" aria-hidden="true"></li>
+      <li><a href="#standing"><span class="nm">Where it stands</span><span class="md">now</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="intro">
+      <span class="label">Build history</span>
+      <h1>StrudelAssistant Liner Notes</h1>
+      <p class="lede">How StrudelAssistant went from a documentation chatbot to an agent that turns a hummed melody into Strudel and checks its own code before answering. Twelve phases in the order they happened, with the measurements that changed course along the way.</p>
+      <div class="meta">
+        <span><b>26 Aug – 14 Sep 2026</b></span>
+        <span><b>7</b> commits on main</span>
+        <span><b>13</b> on feat/hum-to-pattern</span>
+        <span><b>1</b> abandoned branch</span>
+      </div>
+      <p class="sources">Phases 01 to 03 are reconstructed from git alone, so where no commit records a reason, this page says so. Phases 04 to 12 are written from the working session in which they were built.</p>
+    </div>
+
+    <div class="lane-block" id="timeline">
+      <span class="label">Timeline</span>
+      <div class="lane-wrap">
+        <ol class="lane" aria-label="Phases by day">
+          <li class="day">
+            <span class="d">26 Aug</span><span class="n">5 commits</span>
+            <span class="chips"><a class="chip" href="#p01"><b>01</b><span>RAG demo</span></a><a class="chip" href="#p02"><b>02</b><span>Hybrid</span></a><a class="chip" href="#p03"><b>03</b><span>Interface</span></a></span>
+          </li>
+          <li class="day">
+            <span class="d">27 Aug</span><span class="n">3 commits</span>
+            <span class="chips"><a class="chip cont" href="#p03" aria-label="Phase 03, continued"><b>03</b><span>cont.</span></a></span>
+          </li>
+          <li class="day gap">
+            <span class="d">28 Aug – 11 Sep</span><span class="n">15 days, no commits</span>
+          </li>
+          <li class="day wide">
+            <span class="d">12 Sep</span><span class="n">11 commits</span>
+            <span class="chips"><a class="chip" href="#p04"><b>04</b><span>Question</span></a><a class="chip" href="#p05"><b>05</b><span>Transcription</span></a><a class="chip" href="#p06"><b>06</b><span>Recording</span></a><a class="chip" href="#p07"><b>07</b><span>iOS</span></a><a class="chip" href="#p08"><b>08</b><span>Models</span></a><a class="chip" href="#p09"><b>09</b><span>Sandbox</span></a><a class="chip" href="#p10"><b>10</b><span>Commits</span></a><a class="chip" href="#p11"><b>11</b><span>Real voice</span></a></span>
+          </li>
+          <li class="day">
+            <span class="d">13 Sep</span><span class="n">no commits</span>
+            <span class="chips"><a class="chip" href="#p12"><b>12</b><span>Docs</span></a></span>
+          </li>
+          <li class="day">
+            <span class="d">14 Sep</span><span class="n">2 commits</span>
+            <span class="chips"><a class="chip cont" href="#p12" aria-label="Phase 12, continued"><b>12</b><span>cont.</span></a></span>
+          </li>
+        </ol>
+      </div>
+      <p class="lane-note">Commit counts include the abandoned Gradio branch. Two dense days, a long pause, then nearly everything the hum feature needed in one.</p>
+    </div>
+
+    <!-- ================================================================ before -->
+    <div class="era"><span>Part one · the documentation assistant</span></div>
+
+    <section class="phase" id="p01">
+      <div class="ph-head">
+        <span class="ph-no">01</span>
+        <div><p class="ph-when"><b>26 Aug</b> · 09:14 – 17:26</p><h2>A RAG demo, pointed at Strudel</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>Not recorded. These are the first commits.</dd>
+          <dt>Commits</dt><dd><ul class="commits"><li><code>ec34e50</code><span>Initial commit</span></li><li><code>0cd8726</code><span>simple rag</span></li></ul></dd>
+        </dl>
+        <div class="prose">
+          <p>The repository opened with a licence and a two-line README. About eight hours later, a commit called "simple rag" landed the skeleton that still runs today: a LangChain agent on <code>gpt-4o-mini</code> with a single tool, <code>retrieve_context</code>, searching a Pinecone index built by crawling strudel.cc with Tavily and splitting pages into 4,000-character chunks. The interface was a Streamlit chat.</p>
+          <p>The tool already returned its documents as a separate artifact next to the text the model reads. That is still how the page cites its sources.</p>
+        </div>
+        <div class="callout"><span class="tag">Inferred</span><p>The ingestion script's first docstring read "Lesson 6 / ingestion - Crawl python.langchain.com and index it into Pinecone". The pipeline most likely began as a course exercise on LangChain's docs and was retargeted at Strudel.</p></div>
+      </div>
+    </section>
+
+    <section class="phase" id="p02">
+      <div class="ph-head">
+        <span class="ph-no">02</span>
+        <div><p class="ph-when"><b>26 Aug</b> · 17:42 – 18:34</p><h2>Hybrid search and the function reference</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>Not recorded.</dd>
+          <dt>Commits</dt><dd><ul class="commits"><li><code>c576da4</code><span>Add new dependencies and update package configurations</span></li><li><code>03142f6</code><span>Refactor code structure for improved readability and maintainability</span></li></ul></dd>
+        </dl>
+        <div class="prose">
+          <p>Two commits in under an hour made retrieval good at Strudel in particular, and neither title says so. The first added BM25 alongside Pinecone through an <code>EnsembleRetriever</code>, so an exact function name like <code>lpf</code> surfaces even when embeddings rank it low. It also gave chunks content-addressed ids and a local dump, <code>data/chunks.json</code>, which the lexical side reads.</p>
+          <p>The second taught ingestion to read Strudel's source code. The function reference is not a crawlable page; the REPL renders it from JSDoc comments in the Strudel repository. Ingestion now fetches those files from Codeberg and turns each documented function into one document, never split.</p>
+          <p>The same commit added <code>all_docs_prototype.json</code>: 378 function entries, each with a name, tags, synonyms, parameters and a description. Its role as a prototype of that extraction is inferred from its name and shape.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p03">
+      <div class="ph-head">
+        <span class="ph-no">03</span>
+        <div><p class="ph-when"><b>26 Aug</b> 18:51 – <b>27 Aug</b> 15:16</p><h2>From Streamlit to a studio interface</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>Not recorded.</dd>
+          <dt>Commits</dt><dd><ul class="commits">
+            <li><code>75fc8b0</code><span>gradio ui <span class="branch">· gradio-UI branch, never merged</span></span></li>
+            <li><code>f93d096</code><span>Add initial CSS styles for Strudel Assistant interface</span></li>
+            <li><code>6fd9923</code><span>feat: Enhance StrudelAssistant with visualiser support and editor resizing</span></li>
+            <li><code>546cf23</code><span>docs: Update README and add .env.example for environment variable setup</span></li>
+          </ul></dd>
+        </dl>
+        <div class="prose">
+          <p>Seventeen minutes after phase 02, a Gradio chat replaced Streamlit on a side branch. That branch was never merged, and no commit says why.</p>
+          <p>The next afternoon, a commit titled as a stylesheet did far more: it deleted the Streamlit app and replaced it with a FastAPI server and a hand-built page with no framework and no build step. Its stylesheet names the direction, "studio hardware". Answers render server-side with raw HTML disabled, every code block becomes a panel with Play, Edit and Copy, and <code>@strudel/web</code> 1.3.0 plays patterns in the browser, with the engine's own clock driving the lane in the top bar.</p>
+          <p>An hour later came five visualisers, among them a piano roll and an oscilloscope, a resizable editor, and the first architecture and extending docs. A README pass and <code>.env.example</code> closed the phase. <code>main</code> has not moved since.</p>
+        </div>
+        <div class="callout warn"><span class="tag">Correction</span><p>The decisions log's inferred entry says FastAPI replaced Flask. Flask was declared as a dependency, but no commit in any branch ever imports it. What FastAPI replaced was Streamlit.</p></div>
+      </div>
+    </section>
+
+    <div class="pause" role="note"><span class="d">28 Aug – 11 Sep</span><p>Fifteen days without a commit.</p></div>
+
+    <!-- ================================================================ hum -->
+    <div class="era"><span>Part two · hum to pattern</span></div>
+
+    <section class="phase" id="p04">
+      <div class="ph-head">
+        <span class="ph-no">04</span>
+        <div><p class="ph-when"><b>12 Sep</b> · no commit</p><h2>Could it listen?</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>A question: could an iOS app record someone singing and have the assistant rebuild it in Strudel?</dd>
+          <dt>Decided</dt><dd>The input is a hummed or sung melody, not beatboxing or spoken words. The app is a Capacitor wrapper around the existing page, not a native rewrite.</dd>
+        </dl>
+        <div class="prose">
+          <p>One rule was set before any code and survived everything after it: <strong>the model never hears the audio.</strong> Signal processing measures pitch and timing, and the agent receives facts plus a skeleton to make musical. Phase 08 later tested that rule head-on.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p05">
+      <div class="ph-head">
+        <span class="ph-no">05</span>
+        <div><p class="ph-when"><b>12 Sep</b></p><h2>Hearing notes in a clean hum</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>The core of the feature, built first because nothing else matters if a hum doesn't transcribe.</dd>
+          <dt>Commits</dt><dd><ul class="commits"><li><code>4aa931d</code><span>feat(melody): transcribe hummed audio into a Strudel skeleton</span></li></ul></dd>
+        </dl>
+        <div class="prose">
+          <p><code>app/backend/melody.py</code> tracks pitch with pYIN, rounds each frame to a semitone, groups runs into notes, snaps them to a sixteenth-note grid, estimates the key and writes mini-notation. The syntax was checked against the project's own corpus first: <code>~</code> for a rest, <code>@n</code> to hold, lowercase note names such as <code>c#4</code>.</p>
+          <p>No recording of a person has ground truth, so the tests synthesize hums from known melodies.</p>
+        </div>
+        <h3>Course corrections</h3>
+        <div class="tbl-wrap">
+          <table class="corr">
+            <thead><tr><th>Tried</th><th>What happened</th><th>Replaced with</th></tr></thead>
+            <tbody>
+              <tr><td>Notes from pitch runs alone</td><td><span class="hit" aria-hidden="true"></span>"c4 c4" came back as one long c4, which also dragged the tempo to half</td><td>Also cut runs at detected onsets</td></tr>
+              <tr><td>Refining tempo by fitting onsets to the grid</td><td><span class="hit" aria-hidden="true"></span>Worse than beat tracking alone: a slower tempo with a coarser grid fits just as well, so the search drifted down</td><td>Removed. Beat tracking, folded into range, snapped to a multiple of 5</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Result</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Seven clean synthesized melodies, 70–150 bpm</th><th class="r">Correct</th></tr></thead>
+            <tbody>
+              <tr><td>Key</td><td class="r"><span class="num">7 of 7</span></td></tr>
+              <tr><td>Note sequence</td><td class="r"><span class="num">6 of 7</span></td></tr>
+              <tr><td>Tempo, within 2%</td><td class="r"><span class="num">6 of 7</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p06">
+      <div class="ph-head">
+        <span class="ph-no">06</span>
+        <div><p class="ph-when"><b>12 Sep</b></p><h2>Recording in the page, on every screen</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>Wiring transcription to a microphone, then a request to design for phone, tablet and desktop.</dd>
+          <dt>Commits</dt><dd><ul class="commits"><li><code>d7b6e6b</code><span>feat(api): add /api/hum, transcription plus pattern generation</span></li><li><code>b959db9</code><span>feat(web): record a melody and get a pattern back</span></li></ul></dd>
+        </dl>
+        <div class="prose">
+          <p><code>POST /api/hum</code> takes a recording, transcribes it, and passes a prompt to the same agent that answers chat. It returns two patterns: the literal transcription, which needs no model and still comes back when the model call fails, and the agent's elaborated version.</p>
+          <p>The page records with the browser's recorder but uploads 16 kHz mono WAV, decoded and resampled in the page, because the server's audio library reads neither the WebM Chrome produces nor the AAC Safari produces. The preview browser blocks microphones, so end-to-end tests used a hum synthesized inside the page. That surfaced problems no unit test could.</p>
+        </div>
+        <h3>Course corrections</h3>
+        <div class="tbl-wrap">
+          <table class="corr">
+            <thead><tr><th>Tried</th><th>What happened</th><th>Replaced with</th></tr></thead>
+            <tbody>
+              <tr><td><code>piano</code> as the default sound</td><td><span class="hit" aria-hidden="true"></span>Playback failed: the page loads only the dirt-samples drums and the built-in synths</td><td><code>triangle</code>, and the prompt lists what is loaded</td></tr>
+              <tr><td>Telling the agent to add <code>.slow(2)</code></td><td><span class="hit" aria-hidden="true"></span>It dropped it often enough that melodies played at double speed</td><td>Hand it the finished expression, and restore <code>.slow(n)</code> on the server when it is still missing</td></tr>
+              <tr><td>A grey record dot that turns red on hover</td><td><span class="hit" aria-hidden="true"></span>Phones have no hover, so the only control on a phone looked disabled</td><td>Red at rest, dimmed</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="prose">
+          <p>Two more prompt rules went in, against variable assignments and against soundfonts the page never loads. Each caught the failure it named, and the model found variations. Phase 09 is the story of why rules stopped being the answer.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p07">
+      <div class="ph-head">
+        <span class="ph-no">07</span>
+        <div><p class="ph-when"><b>12 Sep</b></p><h2>A native shell for iOS</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>The Capacitor decision from phase 04.</dd>
+          <dt>Commits</dt><dd><ul class="commits"><li><code>2d88161</code><span>feat(mobile): wrap the web app as an iOS app with Capacitor</span></li></ul></dd>
+        </dl>
+        <div class="prose">
+          <p><code>mobile/</code> wraps the same page in Capacitor. The Python backend cannot run on a phone, so the app serves the page from its bundle and calls the server over the network. That makes the app a different origin from the API, which is why the page gained a configurable API address and the server gained a CORS allow-list.</p>
+          <p>A sync script copies the page into the app and injects a generated <code>config.js</code>. A second script patches what Capacitor's template leaves out: the microphone permission text, without which iOS kills the app on the first recording; an audio session that keeps Strudel audible in silent mode and on the loudspeaker after recording; and permission to reach a Mac over plain http during development.</p>
+        </div>
+        <div class="callout warn"><span class="tag">Not built</span><p>The patcher was tested against the real template extracted from <code>@capacitor/cli</code> and runs safely twice. The app itself was never built: this machine has no Xcode and no CocoaPods.</p></div>
+      </div>
+    </section>
+
+    <section class="phase" id="p08">
+      <div class="ph-head">
+        <span class="ph-no">08</span>
+        <div><p class="ph-when"><b>12 Sep</b></p><h2>Choosing models by measurement</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>A question: which OpenAI model would help most with sound and music?</dd>
+          <dt>Commits</dt><dd><ul class="commits"><li><code>87566a2</code><span>perf(agent): switch to gpt-5.4-mini</span></li></ul></dd>
+        </dl>
+        <div class="prose">
+          <p>The question split in two, and each half was tested on this app's own task rather than answered from reputation. First: could an audio model replace the signal processing? Three were sent the same clean synthetic hum that <code>melody.py</code> transcribes exactly.</p>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Audio model, two attempts each</th><th class="r">Correct note sequences</th></tr></thead>
+            <tbody>
+              <tr><td><code>gpt-audio-1.5</code>, <code>gpt-audio</code>, <code>gpt-audio-mini</code></td><td class="r"><span class="num">0 of 6</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="prose">
+          <p>Every tempo was wrong too, and no model agreed with itself between attempts. Phase 04's rule stands. Second: which chat model writes the Strudel? Five runs each through the full pipeline, scoring whether the melody survives verbatim, <code>.slow(n)</code> is kept, no variable assignment appears, and no unloaded soundfont is used.</p>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Chat model</th><th class="r">Clean runs</th><th class="r">Mean time</th></tr></thead>
+            <tbody>
+              <tr><td><code>gpt-5.4-mini</code><span class="pilltag">chosen</span></td><td class="r"><span class="num">5 of 5</span></td><td class="r"><span class="num">4.5 s</span></td></tr>
+              <tr><td><code>gpt-6-astra</code></td><td class="r"><span class="num">5 of 5</span></td><td class="r"><span class="num">10.1 s</span></td></tr>
+              <tr><td><code>gpt-5.5</code></td><td class="r"><span class="num">5 of 5</span></td><td class="r"><span class="num">12.6 s</span></td></tr>
+              <tr><td><code>gpt-5.6-sol</code></td><td class="r"><span class="num">5 of 5</span></td><td class="r"><span class="num">24.3 s</span></td></tr>
+              <tr><td><code>gpt-4o-mini</code>, until now</td><td class="r"><span class="num">1 of 5</span></td><td class="r"><span class="num">5.2 s</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="prose">
+          <p>The smallest current model was the most reliable and the fastest, so the larger ones bought nothing. The newest two also need a different OpenAI API that the code does not yet handle. Pricing was not compared.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p09">
+      <div class="ph-head">
+        <span class="ph-no">09</span>
+        <div><p class="ph-when"><b>12 Sep</b></p><h2>An agent that checks its own work</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>A request to design the assistant as a ReAct loop, with a sandbox where it helps.</dd>
+          <dt>Commits</dt><dd><ul class="commits"><li><code>9a480c7</code><span>feat(sandbox): evaluate Strudel patterns in a locked-down Node process</span></li><li><code>46ed8bb</code><span>feat(agent): turn the agent into a ReAct loop over the sandbox</span></li></ul></dd>
+        </dl>
+        <div class="prose">
+          <p>With one tool, the agent's loop had nothing to react to, and the prompt had become a list of failures to avoid. The fix was a second tool that returns ground truth. <code>validate_pattern</code> runs a candidate pattern in Node with the real Strudel engine and reports what it does, or exactly how it fails. The agent now searches, writes, validates and repeats until the verdict is clean. The sandbox queries patterns and never plays them, so it needs no audio device.</p>
+        </div>
+        <h3>Getting Strudel to run headless</h3>
+        <ul class="plain">
+          <li>Importing <code>@strudel/core</code> threw before any of its code ran: its published dependency <code>@kabelsalat/web</code> no longer exports a class it needs, in any of the five versions tried. A small stub supplies it.</li>
+          <li><code>$:</code> compiles to a method that lives in the audio engine's module, so the sandbox reimplements it: collect each pattern, stack them, query the stack.</li>
+          <li>Strudel prints a banner on import, which corrupted the JSON report. Stray output now goes to stderr.</li>
+        </ul>
+        <div class="callout sec"><span class="tag">Measured</span><p>Without Node's permission flags, a pattern wrote a file to <code>/tmp</code>. With them, file writes, network access and subprocesses all failed while ordinary patterns still evaluated. The flags are a security control, not tidiness.</p></div>
+        <h3>First self-correction</h3>
+        <div class="prose">
+          <p>Asked for a bassline on <code>gm_acoustic_bass</code>, a soundfont the page never loads, the agent searched twice, validated, got a warning, switched to <code>triangle</code> and validated again, in 7.5 seconds. Without the tool it would have shipped a silent pattern. With the sandbox in the loop, a typed answer took about 5.7 seconds and a hummed melody about 9.6.</p>
+        </div>
+        <div class="callout warn"><span class="tag">Caveat</span><p>With the sandbox added, <code>gpt-4o-mini</code> went from 1 to 5 clean runs out of 5. But the validator reported no errors in any of those runs, and the prompt changed at the same time, so that gain is not credited to the sandbox.</p></div>
+      </div>
+    </section>
+
+    <section class="phase" id="p10">
+      <div class="ph-head">
+        <span class="ph-no">10</span>
+        <div><p class="ph-when"><b>12 Sep</b> · 15:13 – 15:15</p><h2>Writing the history down</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>A request for many small commits instead of one large one, on a new branch.</dd>
+          <dt>Commits</dt><dd><ul class="commits"><li><code>d4326cb</code><span>docs: document the humming pipeline, the sandbox and the iOS build</span></li></ul></dd>
+        </dl>
+        <div class="prose">
+          <p><code>feat/hum-to-pattern</code> got eight commits, one per step of phases 05 to 09 plus their documentation, each message saying why rather than what. Three files had carried two stories at once, so their in-between states were rebuilt by hand: the server, the endpoint before CORS; the page script, recording before the API address; the agent, the model switch before the validator. After the last commit all three matched the tested versions byte for byte, and the branch was pushed.</p>
+        </div>
+        <div class="callout"><span class="tag">Reading git</span><p>Phases 05 to 10 are timestamped 15:13 to 15:15 because that is when the commits were created, after the work was done. Their order follows the work. Their times do not.</p></div>
+      </div>
+    </section>
+
+    <section class="phase" id="p11">
+      <div class="ph-head">
+        <span class="ph-no">11</span>
+        <div><p class="ph-when"><b>12 Sep</b> · 15:27 – 15:28</p><h2>Surviving a real voice</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>A request to carry on alone. A human voice had still never been tested.</dd>
+          <dt>Commits</dt><dd><ul class="commits"><li><code>d881504</code><span>fix(melody): survive a real hum, not just a clean tone</span></li><li><code>e026fd3</code><span>test(melody): add the realistic-hum suite that drove the rework</span></li><li><code>e8c1274</code><span>docs: record the new segmentation, the new tempo method and the numbers</span></li></ul></dd>
+        </dl>
+        <div class="prose">
+          <p>Without a voice to test, the test signal was made to behave like one: pitch that slides between notes, breath noise ten times louder, uneven timing and loudness, room rumble, and a singer drifting flat. The pipeline that passed on clean hums failed on the first run.</p>
+        </div>
+        <h3>Course corrections</h3>
+        <div class="tbl-wrap">
+          <table class="corr">
+            <thead><tr><th>Tried</th><th>What happened</th><th>Replaced with</th></tr></thead>
+            <tbody>
+              <tr><td>Cutting notes at spectral onsets</td><td><span class="hit" aria-hidden="true"></span>On a noisy take, breath noise hid the attacks: it caught every pitch change and missed every repeated note</td><td>Cut at dips in loudness, because humming a note twice means closing and reopening</td></tr>
+              <tr><td>Tempo from beat tracking</td><td><span class="hit" aria-hidden="true"></span>Within 10% in 9 of 21 noisy takes. It keys on percussive attacks a voice doesn't make</td><td>The median gap between note starts, measurable once note boundaries were accurate</td></tr>
+              <tr><td>A 70 bpm tempo floor</td><td><span class="hit" aria-hidden="true"></span>A melody hummed at 70 was read as 138: noise put it just under the floor, and it was doubled</td><td>A 60 bpm floor, in a 60–180 window</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Result</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Measure</th><th class="r">Clean, phase 05</th><th class="r">Clean, now</th><th class="r">Realistic, now</th></tr></thead>
+            <tbody>
+              <tr><td>Key</td><td class="r"><span class="num">7 of 7</span></td><td class="r"><span class="num">7 of 7</span></td><td class="r"><span class="num">21 of 21</span></td></tr>
+              <tr><td>Note sequence</td><td class="r"><span class="num">6 of 7</span></td><td class="r"><span class="num">7 of 7</span></td><td class="r"><span class="num">20 of 21</span></td></tr>
+              <tr><td>Tempo</td><td class="r"><span class="num">6 of 7</span> within 2%</td><td class="r"><span class="num">7 of 7</span> within 5%</td><td class="r"><span class="num">21 of 21</span> within 10%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="prose">
+          <p>On clean hums, one tempo that used to be exact now lands 2% out, and the one that was wrong by a third now lands within 4%. The clean tolerance widened to 5% to say so openly. The test suite grew from 14 tests to 36, and it pins the repeated-note failure so it cannot return quietly.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p12">
+      <div class="ph-head">
+        <span class="ph-no">12</span>
+        <div><p class="ph-when"><b>13 Sep</b> – <b>14 Sep</b> 10:43</p><h2>Maps of the system</h2></div>
+      </div>
+      <div class="ph-body">
+        <dl class="facts">
+          <dt>Trigger</dt><dd>Requests for a technical architecture overview, then a page of next steps.</dd>
+          <dt>Commits</dt><dd><ul class="commits"><li><code>f18d7e7</code><span>docs: set up architecture, decisions and runbook docs; trim CLAUDE.md</span></li><li><code>8b775fc</code><span>next steps</span></li></ul></dd>
+        </dl>
+        <div class="prose">
+          <p>Two pages were written from the code and published: <a href="architecture-overview.html">the architecture overview</a> and <a href="next-steps.html">the next steps</a>. On 14 September one commit added a decisions log, a runbook and a <code>CLAUDE.md</code> and expanded the architecture doc, and a second committed the two pages.</p>
+          <p>Writing the next-steps page caught an error in the humming doc: it told readers to start the server with <code>--host 0.0.0.0</code>, a flag the server's entry point ignores.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ now -->
+    <section class="standing" id="standing">
+      <span class="label">Where it stands</span>
+      <h2>Built, pushed, not yet heard</h2>
+      <div class="state">
+        <div>
+          <h4><span class="lamp" aria-hidden="true"></span>Verified</h4>
+          <ul>
+            <li>Transcription, by 36 tests on clean and messy synthetic hums</li>
+            <li>The web app end to end, with synthesized audio</li>
+            <li>The agent correcting itself through the sandbox</li>
+          </ul>
+        </div>
+        <div>
+          <h4><span class="lamp off" aria-hidden="true"></span>Never done</h4>
+          <ul>
+            <li>A real human voice into the microphone</li>
+            <li>An iOS build, or any run on a phone</li>
+            <li>Automated tests for the agent, retrieval, server or page</li>
+          </ul>
+        </div>
+        <div>
+          <h4><span class="lamp off" aria-hidden="true"></span>Open in the repo</h4>
+          <ul>
+            <li><code>feat/hum-to-pattern</code> is 13 commits ahead of <code>main</code> and not merged</li>
+            <li>The transcription module's docstring and the humming doc's diagram still describe phase 05's tempo method</li>
+            <li>The tempo function's docstring understates its own accuracy</li>
+          </ul>
+        </div>
+      </div>
+
+      <footer class="end">Written from git history and the working session, up to commit <code>8b775fc</code>. What comes next is in <a href="next-steps.html">the next steps</a>; how the pieces fit is in <a href="architecture-overview.html">the architecture overview</a>. The reasoning behind each choice is in <code>docs/decisions.md</code>.</footer>
+    </section>
+  </main>
+</div>
+</body>
+</html>

@@ -5,6 +5,24 @@ that had real alternatives; skip routine work. Entries marked "(inferred — con
 reconstructed from code, comments and commit messages rather than a recorded decision — verify or
 delete them.
 
+## 2026-10-14 — Drop the iOS shell and the CORS allowlist; web app only
+
+Removed `mobile/` (Capacitor shell), `STRUDEL_API_BASE` in `app.js`, and the CORS middleware plus
+`STRUDEL_ALLOWED_ORIGINS` in `server.py`. The page and API are always same-origin now, so none of
+it has a job. Focus is the web app. The shell is recoverable from git history (added in `2d88161`).
+The older iOS entry below is left as written.
+
+Revisit when a backend deployment target exists and a native app is wanted again.
+
+## 2026-10-14 — Stay on `gpt-5.4-mini`; `gpt-5.6-luna` untested
+
+`gpt-5.6-luna` (reported at about $0.20/$1.20 per M tokens vs $0.75/$4.50 for `gpt-5.4-mini`, from
+third-party trackers) was the candidate swap. The OpenAI account had no credits, so neither tool
+calling on the Chat Completions path nor the melody benchmark could be run. No model change made.
+
+Revisit once credits are added: check Luna with `init_chat_model`, rerun the benchmark in the
+`core.py` comment, and swap only if it scores 5/5 without needing the Responses API.
+
 ## 2026-09-12 — Tempo from the median gap between note starts, not `beat_track`
 
 Measured on the realistic-hum suite, `beat_track` (percussive onset strength) landed tempo within

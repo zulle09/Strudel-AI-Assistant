@@ -26,7 +26,7 @@ for it.
 uv run python app/server.py            # binds 127.0.0.1:$PORT (default 8000)
 ```
 
-That entry point cannot bind non-locally — there's no `--host` flag. For a phone or another machine
+That entry point cannot bind non-locally — there's no `--host` flag. For another machine
 on the network, run uvicorn directly instead:
 
 ```bash
@@ -52,10 +52,7 @@ machine (`docs/next-steps.html` steps 02/03/15 are all still open). Before writi
 at minimum:
 
 - pick a host for the FastAPI process,
-- put a real hostname and TLS certificate in front of it — the README and `docs/humming.md` both
-  flag that the iOS shell's `NSAllowsLocalNetworking` exception and plain HTTP are
-  development-only,
-- set `STRUDEL_ALLOWED_ORIGINS` to the real origins that will call it,
+- put a real hostname and TLS certificate in front of it,
 - resolve the AGPL question the README's License note raises: `sandbox/` runs Strudel server-side as
   part of a networked service, not just loaded from a CDN into a visitor's browser, which the README
   says needs a lawyer, not a guess.
@@ -139,10 +136,6 @@ Roughly in order of how often each one turns out to be the cause:
    (and therefore `librosa`) lazily, inside the handler. Confirm `uv sync` actually pulled
    `librosa`/`soundfile`/`scipy` — a partial `uv sync` would only surface here, not at server
    startup.
-7. **The iOS app can't reach the backend at all.** Almost always `STRUDEL_API_BASE`, baked into
-   `mobile/www/config.js` at `npm run sync` time, pointing at an address the phone can't reach — a
-   `localhost` value only works in the Simulator. Re-run `npm run sync` with the Mac's LAN IP, and
-   confirm the backend was started with `--host 0.0.0.0` (see Start).
 
 ## Tests
 

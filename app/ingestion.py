@@ -22,7 +22,6 @@ import hashlib
 import json
 import os
 import re
-import ssl
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -32,11 +31,10 @@ import httpx
 from dotenv import load_dotenv
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
-from langchain_tavily import TavilyCrawl, TavilyExtract, TavilyMap
+from langchain_tavily import TavilyCrawl
 
 # Sibling module, imported absolutely -> this file must be run from its own
 # folder (or that folder must be on PYTHONPATH).
@@ -77,8 +75,6 @@ load_dotenv()  # Load environment variables from .env file
 # macOS ships a Python without the system trust store wired up, so crawling
 # HTTPS pages fails with SSLCertVerificationError. Pointing both requests and
 # the stdlib at certifi's CA bundle fixes it for every library in the process.
-# Configure SSL context to use certifi certificates
-ssl_context = ssl.create_default_context(cafile=certifi.where())
 os.environ["SSL_CERT_FILE"] = certifi.where()
 os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 
@@ -94,17 +90,6 @@ embeddings = OpenAIEmbeddings(
 
 vectorStore = PineconeVectorStore(index_name="strudel-doc-index", embedding=embeddings)
 
-'''
-The difference between Chroma and Pinecone is that Chroma is a local vector store that stores embeddings on disk,
-while Pinecone is a managed vector database service that provides scalable and efficient storage and retrieval of embeddings in the cloud.
-'''
-
-# Three complementary Tavily tools:
-#   TavilyExtract - pull clean text out of a KNOWN list of URLs
-#   TavilyMap     - discover the URL graph of a site without downloading content
-#   TavilyCrawl   - discover AND extract in one call (what main() actually uses)
-tavily_extract = TavilyExtract()
-tavily_map = TavilyMap(max_depth=5, max_breath=20, max_pages=1000)
 tavily_crawl = TavilyCrawl()
 
 

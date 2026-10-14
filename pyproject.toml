@@ -5,16 +5,13 @@ description = "Assistente AI per creare e modificare pattern Strudel via chat, c
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "flask>=3.0,<4.0",
     "openai>=1.50,<2.0",
     "python-dotenv>=1.0,<2.0",
     "langsmith>=0.1.100,<1.0",
-    "tavily-python>=0.5,<1.0",
     "langchain-tavily>=0.2.18",
     "langchain-pinecone>=0.2.13",
     "langchain-openai>=1.1.9",
     "langchain-core>=1.6.0",
-    "langchain-chroma>=1.1.0",
     "langchain-text-splitters>=1.1.2",
     "langchain-community>=0.4.2",
     "rank-bm25>=0.2.2",

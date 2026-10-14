@@ -121,7 +121,7 @@ def load_audio(data: bytes) -> Tuple[np.ndarray, int]:
     """Decode uploaded bytes to mono float32 at ANALYSIS_SR.
 
     soundfile (libsndfile) handles WAV/FLAC/OGG but NOT AAC in an .m4a
-    container, which is what iOS hands you by default. The browser side
+    container, which is what Safari's MediaRecorder produces. The browser side
     therefore decodes with Web Audio and uploads WAV; this raises a readable
     error rather than a libsndfile stack trace if something else arrives.
     """

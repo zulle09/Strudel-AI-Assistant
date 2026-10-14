@@ -32,7 +32,6 @@ if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
 from fastapi import FastAPI, File, UploadFile  # noqa: E402
-from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from markdown_it import MarkdownIt  # noqa: E402
@@ -89,27 +88,6 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Strudel Documentation Assistant", lifespan=lifespan)
-
-
-# The iOS build serves the page from the app bundle, so its requests to this
-# server are cross-origin and are refused without this. The browser version
-# is same-origin and never reaches the middleware at all.
-#
-# The two schemes are what WKWebView reports for a bundled Capacitor app;
-# STRUDEL_ALLOWED_ORIGINS (comma-separated) adds any others, which is what a
-# deployment behind a real domain needs.
-ALLOWED_ORIGINS = ["capacitor://localhost", "ionic://localhost", "http://localhost"] + [
-    origin.strip()
-    for origin in os.environ.get("STRUDEL_ALLOWED_ORIGINS", "").split(",")
-    if origin.strip()
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
-)
 
 
 class ChatTurn(BaseModel):

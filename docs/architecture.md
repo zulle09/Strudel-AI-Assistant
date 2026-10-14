@@ -316,15 +316,6 @@ layout, or the caret drifts away from the glyphs. One rule sets both:
 The first Play then fetches `github:tidalcycles/dirt-samples` inside
 `ensureStrudel`'s prebake, so without GitHub the drum banks don't load.
 
-**The iOS shell runs the same frontend from a different origin.** `app.js`
-prefixes every API call with `window.STRUDEL_API_BASE`, which is empty in the
-browser because the page and API share an origin. `mobile/sync-www.mjs` copies
-`app/web` into `mobile/www` and writes a `config.js` that sets the value. It
-injects that script before the literal `<script src="/static/app.js"></script>`
-tag, and the sync throws if the tag changes. The server's CORS allowlist covers
-`capacitor://localhost`, `ionic://localhost` and `http://localhost`.
-`STRUDEL_ALLOWED_ORIGINS` adds more.
-
 ## Data and contracts
 
 **`POST /api/chat`**
@@ -412,13 +403,13 @@ loads instantly and a missing API key surfaces as a readable message in the chat
 instead of a stack trace at boot.
 
 **`.env` is loaded late, and by `core.py`.** `server.py` never calls
-`load_dotenv()`. It reads `STRUDEL_DEBUG`, `STRUDEL_ALLOWED_ORIGINS` and `PORT`
-at import, before the lazy import of `core.py` loads `.env`. Set those three in
+`load_dotenv()`. It reads `STRUDEL_DEBUG` and `PORT`
+at import, before the lazy import of `core.py` loads `.env`. Set those two in
 the shell, because `.env` values for them are silently ignored. API keys and
 `LANGSMITH_*` do work from `.env`, since they are read after it loads.
 
 **`python app/server.py` binds `127.0.0.1` and takes no flags.** To reach the
-server from a phone, run uvicorn directly with `--host 0.0.0.0` (see
+server from another machine, run uvicorn directly with `--host 0.0.0.0` (see
 [runbook.md](runbook.md)).
 
 **A fresh agent is built per request.** `run_llm` calls `create_agent(...)` on
@@ -435,17 +426,8 @@ Present in the code as committed, none of them load-bearing:
 
 - `ingestion.py`'s module docstring says it crawls `python.langchain.com`. It
   crawls `strudel.cc`.
-- `Chroma` is imported in `ingestion.py` but never used (and `langchain-chroma`
-  is a dependency only because of it).
-- `tavily_extract` and `tavily_map` are constructed but unused — only
-  `tavily_crawl` is. They are there to illustrate the three Tavily tools.
-- `ssl_context` is built and never used; the two `os.environ` lines beneath it
-  are what actually fix certificate verification on macOS.
-- `flask` and `tavily-python` are declared dependencies that nothing imports —
-  leftovers from the pre-FastAPI version and from before `langchain-tavily`
-  replaced the raw Tavily SDK. (`langsmith` looks unused for the same reason but
-  is not: LangChain picks it up through the `LANGSMITH_*` environment variables
-  without an explicit import.)
+- `langsmith` looks unused but is not: LangChain picks it up through the `LANGSMITH_*`
+  environment variables without an explicit import.
 
 Docs and config that disagree with the code:
 
@@ -458,5 +440,3 @@ Docs and config that disagree with the code:
 - The `melody.py` module docstring and the diagram in humming.md still say tempo
   comes from `beat_track`. `_estimate_tempo`'s docstring says 19 of 21 realistic
   takes land within 10%, while commit d881504 and humming.md say 21 of 21.
-- humming.md says to start the backend with `--host 0.0.0.0`, but
-  `python app/server.py` doesn't accept that flag.

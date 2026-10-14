@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 StrudelAssistant answers questions about [Strudel](https://strudel.cc), a JavaScript live-coding
 music environment. It combines RAG with a ReAct agent, returns patterns you can play, and turns a
 hummed melody into a pattern. The parts are a Python backend (FastAPI + LangChain), a vanilla JS
-frontend, a Node sandbox that runs the real Strudel engine, and a Capacitor iOS shell.
+frontend and a Node sandbox that runs the real Strudel engine.
 
 The docs are detailed. Read the relevant one before a non-trivial change:
 - `docs/architecture.md` (imported above): request lifecycle, ingestion, frontend, invariants and traps
@@ -17,7 +17,7 @@ The docs are detailed. Read the relevant one before a non-trivial change:
   rollback, migrations, what to check when it's down
 - `docs/extending.md`: step-by-step guides for changing the model, retrieval, prompt, corpus, UI,
   visualisers and debugging
-- `docs/humming.md`: the audio-to-pattern pipeline, accuracy numbers, and the iOS build
+- `docs/humming.md`: the audio-to-pattern pipeline, accuracy numbers
 
 ## Commands
 

@@ -1,8 +1,7 @@
 # Humming
 
 Record a melody, get it back as a Strudel pattern. This covers the
-transcription pipeline, the decisions inside it, and the iOS app that puts a
-microphone in your pocket.
+transcription pipeline and the decisions inside it.
 
 For the documentation-question path, see [architecture.md](architecture.md).
 
@@ -120,11 +119,11 @@ of every generated pattern precisely so it is one number to correct.
 ## Why the browser encodes WAV
 
 `MediaRecorder` produces whatever the engine prefers: WebM/Opus on Chrome, AAC
-in an MP4 container on Safari and in the iOS web view. libsndfile, which
+in an MP4 container on Safari. libsndfile, which
 `soundfile` wraps, reads neither. Web Audio decodes all of them, so
 `blobToWav` decodes, downmixes and resamples to 16 kHz mono in the browser and
 the server only ever sees one format. It also shrinks the upload by an order
-of magnitude, which matters on a phone.
+of magnitude.
 
 `OfflineAudioContext` does the downmix and the resample in one pass using the
 engine's own resampler.
@@ -142,68 +141,6 @@ finished `note(...).slow(n)` expression to chain onto rather than a rule to
 remember, because asked to "add `.slow(2)`" the model simply forgets, and the
 melody then plays at double speed.
 
-## The iOS app
-
-`mobile/` is a [Capacitor](https://capacitorjs.com) shell around the same web
-app. There is no second interface: `sync-www.mjs` copies `app/web` into
-`mobile/www` and the phone runs the code you already debugged in a browser.
-
-The backend does not move. It is Python and needs an OpenAI key and a Pinecone
-index, so it stays on your machine or a host, and the app talks to it over the
-network.
-
-### Setup
-
-Requires **Xcode** (the full app, not just Command Line Tools) and
-**CocoaPods** (`brew install cocoapods`).
-
-```bash
-cd mobile
-npm install
-STRUDEL_API_BASE=http://192.168.1.20:8000 npm run sync
-npx cap add ios
-node configure-ios.mjs
-npx cap open ios
-```
-
-Then press Run in Xcode.
-
-`STRUDEL_API_BASE` is the address of the backend as the phone sees it. A
-simulator can reach your Mac on `http://localhost:8000`; a real device needs
-the Mac's LAN address, and the backend has to be started with
-`--host 0.0.0.0` to answer on it. Re-run `npm run sync` after any change to
-`app/web`, and after changing the address.
-
-### What configure-ios.mjs does, and why each part is not optional
-
-Run it once after `npx cap add ios`, and again if you regenerate `ios/`. It is
-idempotent, and if an anchor no longer matches a future Capacitor template it
-prints the snippet to apply by hand rather than corrupting the file.
-
-- **`NSMicrophoneUsageDescription`.** Without it iOS kills the app the instant
-  `getUserMedia` is called. Not a denied permission, a crash.
-- **The audio session.** A `WKWebView` defaults to a session the ring/silent
-  switch mutes, so Strudel would play nothing on a phone on silent, which is
-  most phones. `.playAndRecord` also routes output to the earpiece by default,
-  so after the first recording the music would come out of the phone-call
-  speaker; `.defaultToSpeaker` is what keeps it on the loudspeaker.
-- **`NSAllowsLocalNetworking`.** App Transport Security blocks plain http, and
-  the backend on your Mac is plain http. This is development-only. Serve the
-  backend over https before shipping anything.
-
-The page also needs `viewport-fit=cover` and `env(safe-area-inset-*)` padding,
-both already in `app/web`, or the rail sits under the notch and the composer
-under the home indicator.
-
-### Licensing
-
-Strudel is AGPL-3.0, and Apple's App Store terms are widely held to conflict
-with GPL-family licenses for distributed binaries. This shell loads
-`@strudel/web` from a CDN at runtime rather than bundling it, so the binary
-does not contain AGPL code, but that is not legal advice and the AGPL's
-network clause is a separate question. For personal use and TestFlight it does
-not arise.
-
 ## Invariants and traps
 
 - **The grid constants are shared.** `STEPS_PER_BEAT`, `BEATS_PER_CYCLE` and
@@ -216,9 +153,3 @@ not arise.
   nothing else, so `piano` and every `gm_*` soundfont name fails at playback
   with "sound not found". `DEFAULT_SOUND` and `AVAILABLE_SOUNDS` in
   `melody.py` encode that, for the literal pattern and for the agent.
-- **`config.js` is injected, not committed.** `sync-www.mjs` adds the script
-  tag to the copy in `mobile/www`, because `/config.js` does not exist when
-  FastAPI serves the same page in a browser.
-- **CORS is only for the app.** The browser version is same-origin and never
-  reaches the middleware. Add deployment origins through
-  `STRUDEL_ALLOWED_ORIGINS`.
