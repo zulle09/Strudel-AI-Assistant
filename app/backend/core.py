@@ -46,14 +46,18 @@ vectorstore = PineconeVectorStore(
 #     gpt-5.6-sol    5/5 clean   24.3s   (needs the Responses API - see below)
 #     gpt-4o-mini    1/5 clean    5.2s   - dropped `.slow(2)` in four runs
 #
-# gpt-5.4-mini is both the most reliable and the fastest, so the larger models
-# buy nothing here. The newer two reject function tools on the Chat
-# Completions path and must be built as
-# `ChatOpenAI(model=..., use_responses_api=True)`, which returns a list of
-# content blocks rather than a string - run_llm's answer extraction below and
-# server.py's markdown render both assume a string and would need adjusting.
+# Re-run on 2026-10-14 with a 16-note, 4-cycle hum through the full pipeline:
+#
+#     gpt-5.4-mini   5/5 clean   mean 11.0s   $0.75 / $4.50 per M tokens
+#     gpt-5.6-luna   5/5 clean   mean  9.5s   $0.20 / $1.20 per M tokens
+#
+# Luna is the same quality for about a quarter of the price. It rejects function tools on
+# Chat Completions unless reasoning_effort is "none", which is why that is set below; it
+# still returns plain string content, so run_llm and server.py need no change. The
+# larger models above scored no better and need the Responses API (content blocks, not
+# strings), which run_llm's answer extraction and server.py's markdown render don't handle.
 # Initialize chat model
-model = init_chat_model("gpt-5.4-mini", model_provider="openai")
+model = init_chat_model("gpt-5.6-luna", model_provider="openai", reasoning_effort="none")
 
 # Chunk dump written by ingestion.py (app/ -> project root -> data/chunks.json).
 CHUNKS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "chunks.json"

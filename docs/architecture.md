@@ -31,7 +31,7 @@ own section, and [humming.md](humming.md) covers it in full.
 flowchart TD
     B["Browser<br/>app/web/static/app.js"] -->|"POST /api/chat<br/>{message, history}"| S["FastAPI<br/>app/server.py"]
     S --> R["run_llm()<br/>app/backend/core.py"]
-    R --> A["LangChain agent<br/>gpt-5.4-mini"]
+    R --> A["LangChain agent<br/>gpt-5.6-luna"]
     A -->|"tool call — may repeat"| T["retrieve_context()"]
     A -->|"tool call — may repeat"| V["validate_pattern()"]
     V --> SB["Node sandbox<br/>sandbox/validate.mjs"]

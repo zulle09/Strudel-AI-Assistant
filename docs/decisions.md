@@ -14,6 +14,20 @@ The older iOS entry below is left as written.
 
 Revisit when a backend deployment target exists and a native app is wanted again.
 
+## 2026-10-14 — Chat model: `gpt-5.6-luna` with `reasoning_effort="none"`
+
+Supersedes the "stay on `gpt-5.4-mini`" entry below, which was written before credits were added.
+Five runs each on a 16-note, 4-cycle hum through the full pipeline: both models 5/5 clean
+(`gpt-5.4-mini` mean 11.0s, `gpt-5.6-luna` mean 9.5s). Luna is $0.20 / $1.20 per M tokens against
+$0.75 / $4.50 (OpenAI's model docs), so same quality at about a quarter of the cost. Luna rejects
+function tools on Chat Completions unless `reasoning_effort` is `"none"`; with that set it returns
+string content, so `run_llm` and `server.py` are unchanged. One melody, five runs: a narrow
+benchmark, not a quality survey.
+
+Revisit if answer quality on non-melody chat questions looks worse (nothing here measured that), if
+`reasoning_effort="none"` turns out to hurt multi-step validate-and-fix loops on hard patterns, or
+if the Responses API generalisation lands and a stronger model is wanted.
+
 ## 2026-10-14 — Stay on `gpt-5.4-mini`; `gpt-5.6-luna` untested
 
 `gpt-5.6-luna` (reported at about $0.20/$1.20 per M tokens vs $0.75/$4.50 for `gpt-5.4-mini`, from
