@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import subprocess
+import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional, cast
 
@@ -16,6 +17,7 @@ from langchain_core.documents import Document
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import OpenAIEmbeddings
 
+from backend.models import MODELS, resolve as resolve_model
 from logger import log_warning
 
 load_dotenv()
@@ -33,31 +35,50 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 vectorstore = PineconeVectorStore(
     index_name="strudel-doc-index", embedding=embeddings
 )
-# Provider-agnostic factory: change the string to switch model or vendor.
+# The chat model is chosen per request from the allowlist in models.py. Instances are
+# built lazily and cached, one per id.
 #
 # Benchmarked on this app's own melody task (five runs each through the full
 # retrieval pipeline, scoring whether the transcribed melody survives verbatim,
 # `.slow(n)` is kept, no invalid variable assignment appears, and no unloaded
 # soundfont is used):
 #
-#     gpt-5.4-mini   5/5 clean    4.5s
+#     gpt-5.4-mini   5/5 clean    4.5s   (2026-09-12; 11.0s on 2026-10-14's 4-cycle hum)
 #     gpt-5.5        5/5 clean   12.6s
-#     gpt-6-astra    5/5 clean   10.1s   (needs the Responses API - see below)
-#     gpt-5.6-sol    5/5 clean   24.3s   (needs the Responses API - see below)
+#     gpt-6-astra    5/5 clean   10.1s
+#     gpt-5.6-sol    5/5 clean   24.3s
 #     gpt-4o-mini    1/5 clean    5.2s   - dropped `.slow(2)` in four runs
+#     gpt-5.6-luna   5/5 clean    9.5s   (2026-10-14, 4-cycle hum; $0.20 / $1.20 per M tokens)
 #
-# Re-run on 2026-10-14 with a 16-note, 4-cycle hum through the full pipeline:
+# The 5.6 models reject function tools on Chat Completions unless reasoning_effort is
+# "none" (models.py sets it); with that they return plain string content, so run_llm and
+# server.py need no change. An earlier note here said Sol needed the Responses API. It
+# did not: the default reasoning setting was what it rejected.
 #
-#     gpt-5.4-mini   5/5 clean   mean 11.0s   $0.75 / $4.50 per M tokens
-#     gpt-5.6-luna   5/5 clean   mean  9.5s   $0.20 / $1.20 per M tokens
-#
-# Luna is the same quality for about a quarter of the price. It rejects function tools on
-# Chat Completions unless reasoning_effort is "none", which is why that is set below; it
-# still returns plain string content, so run_llm and server.py need no change. The
-# larger models above scored no better and need the Responses API (content blocks, not
-# strings), which run_llm's answer extraction and server.py's markdown render don't handle.
-# Initialize chat model
-model = init_chat_model("gpt-5.6-luna", model_provider="openai", reasoning_effort="none")
+# max_retries: the OpenAI client retries 429s and 5xx with exponential backoff, honouring
+# Retry-After, but defaults to 2 attempts. 5 rides out a short rate-limit window (about
+# 15s of waiting) before the request fails.
+_models: Dict[str, Any] = {}
+_models_lock = threading.Lock()
+
+
+def get_model(model_id: Optional[str] = None):
+    """The chat model for an allowlisted id (the default when None).
+
+    Raises ValueError for an id that is not on the list.
+    """
+    model_id = resolve_model(model_id)
+    if model_id not in _models:
+        with _models_lock:
+            if model_id not in _models:
+                _models[model_id] = init_chat_model(
+                    model_id,
+                    model_provider="openai",
+                    max_retries=5,
+                    **MODELS[model_id]["kwargs"],
+                )
+    return _models[model_id]
+
 
 # Chunk dump written by ingestion.py (app/ -> project root -> data/chunks.json).
 CHUNKS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "chunks.json"
@@ -138,6 +159,15 @@ SANDBOX_TIMEOUT_SEC = 20
 SANDBOX_FLAGS = ["--permission", f"--allow-fs-read={SANDBOX_DIR}"]
 
 
+def _sandbox_problem() -> Optional[str]:
+    """Why the validator can't run, or None when it can."""
+    if not shutil.which("node"):
+        return "Node.js is not installed"
+    if not SANDBOX_ENTRY.exists() or not (SANDBOX_DIR / "node_modules").exists():
+        return "the sandbox is not installed (run `npm install` in sandbox/)"
+    return None
+
+
 @tool
 def validate_pattern(code: str) -> str:
     """Run a Strudel pattern and report whether it works.
@@ -152,16 +182,11 @@ def validate_pattern(code: str) -> str:
     Args:
         code: The complete pattern, exactly as you would give it to the user.
     """
-    if not shutil.which("node"):
+    problem = _sandbox_problem()
+    if problem:
         return (
-            "The validator is unavailable: Node.js is not installed. "
+            f"The validator is unavailable: {problem}. "
             "Answer from the documentation alone and say the pattern is unverified."
-        )
-    if not SANDBOX_ENTRY.exists() or not (SANDBOX_DIR / "node_modules").exists():
-        return (
-            "The validator is unavailable: the sandbox is not installed "
-            "(run `npm install` in sandbox/). Answer from the documentation "
-            "alone and say the pattern is unverified."
         )
 
     try:
@@ -208,7 +233,21 @@ def validate_pattern(code: str) -> str:
     return " ".join(lines)
 
 
-def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
+# Said once, when the server first loads this module (at startup, via the prewarm
+# thread), so a missing sandbox shows in the log instead of only in answers.
+_startup_problem = _sandbox_problem()
+if _startup_problem:
+    log_warning(
+        f"Pattern validator disabled: {_startup_problem}. "
+        "The agent will answer without checking its patterns."
+    )
+
+
+def run_llm(
+    query: str,
+    chat_history: Optional[List[Dict[str, str]]] = None,
+    model_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     Run the RAG pipeline to answer a query using retrieved documentation.
 
@@ -219,6 +258,7 @@ def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> 
             follow-ups ("and how do I add reverb to that?") against what was
             already discussed - without it every question was answered in
             isolation, so the retriever had no way to know what "that" referred to.
+        model_id: An id from backend.models.MODELS; the default when omitted.
 
     Returns:
         Dictionary containing:
@@ -280,7 +320,9 @@ def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> 
     # A fresh agent per call. In production build it once at module level - this
     # rebuilds the graph on every request.
     agent = create_agent(
-        model, tools=[retrieve_context, validate_pattern], system_prompt=system_prompt
+        get_model(model_id),
+        tools=[retrieve_context, validate_pattern],
+        system_prompt=system_prompt,
     )
     
     # Prior turns first (only role/content survive - the UI-only "sources" key

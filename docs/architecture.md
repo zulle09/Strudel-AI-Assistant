@@ -31,7 +31,7 @@ own section, and [humming.md](humming.md) covers it in full.
 flowchart TD
     B["Browser<br/>app/web/static/app.js"] -->|"POST /api/chat<br/>{message, history}"| S["FastAPI<br/>app/server.py"]
     S --> R["run_llm()<br/>app/backend/core.py"]
-    R --> A["LangChain agent<br/>gpt-5.6-luna"]
+    R --> A["LangChain agent<br/>model picked by the user<br/>(default gpt-5.6-luna)"]
     A -->|"tool call — may repeat"| T["retrieve_context()"]
     A -->|"tool call — may repeat"| V["validate_pattern()"]
     V --> SB["Node sandbox<br/>sandbox/validate.mjs"]
@@ -135,10 +135,11 @@ since those are known not to be loaded.
   soundfont fail at playback. The sandbox flags only the `gm_` prefix, so a
   made-up sample name passes validation and plays silence. `DEFAULT_SOUND` and
   `AVAILABLE_SOUNDS` in `melody.py` encode the same rule for the hum path.
-- **A missing sandbox degrades without any log.** If `node` isn't on PATH or
-  `sandbox/node_modules` is missing, the tool returns a sentence telling the
-  agent to answer unverified. The server logs nothing, and the only sign is an
-  answer saying its pattern is unverified.
+- **A missing sandbox is logged once, at startup.** If `node` isn't on PATH or
+  `sandbox/node_modules` is missing, `core.py` prints a "Pattern validator
+  disabled" warning when it loads, and the tool returns a sentence telling the
+  agent to answer unverified. Chat still works; the answer says its pattern is
+  unverified.
 - **Every call is a cold start.** Each validation spawns Node and re-imports
   Strudel, and a correction loop pays that cost on every attempt.
   `SANDBOX_TIMEOUT_SEC` (20 s) exists to stop infinite loops, not slow patterns.
@@ -323,7 +324,8 @@ The first Play then fetches `github:tidalcycles/dirt-samples` inside
 ```jsonc
 // request
 { "message": "what does lpf do?",
-  "history": [{ "role": "user"|"assistant", "content": "..." }] }
+  "history": [{ "role": "user"|"assistant", "content": "..." }],
+  "model": "gpt-5.6-terra" }   // optional; an id from GET /api/models, default when omitted
 
 // 200
 { "answer_html": "<p>…</p>",   // markdown rendered server-side
@@ -331,14 +333,18 @@ The first Play then fetches `github:tidalcycles/dirt-samples` inside
   "sources":     ["https://…"] // de-duplicated, first-seen order
 }
 
-// 4xx / 5xx
+// 4xx / 5xx   (400 for an empty message or a model id not on the list)
 { "error": "a sentence saying what to fix" }
 ```
+
+**`GET /api/models`** returns `{ "default": "gpt-5.6-luna", "models": [{ id, label, note }] }`. The list
+is the allowlist in `app/backend/models.py`, which is also what the dropdown shows.
 
 The client stores `answer_md` (not the HTML) in its history, so the next turn
 sends the model the same text it produced.
 
-**`POST /api/hum`**: multipart, one field `audio` (the browser sends 16 kHz mono WAV)
+**`POST /api/hum`**: multipart, one field `audio` (the browser sends 16 kHz mono WAV) and an
+optional `model` field with the same meaning as in chat
 
 ```jsonc
 // 200

@@ -14,6 +14,22 @@ The older iOS entry below is left as written.
 
 Revisit when a backend deployment target exists and a native app is wanted again.
 
+## 2026-10-15 — The app user picks the chat model, from a fixed GPT-5.6 allowlist
+
+A dropdown above the composer sends a model id with each chat and hum request. The server accepts
+only ids in `app/backend/models.py` (Luna, Terra, Sol, default Luna) and answers 400 to anything
+else, so a client cannot choose an unlisted model. Alternatives were an env var for the developer to
+set, or a free-text model name; the first does not put the choice in the user's hands and the second
+lets anyone spend on any model. The 5.6 family was chosen because all three tested in the same
+session accept tool calling on Chat Completions with `reasoning_effort="none"` and return string
+content, so no Responses API work was needed. This also corrects the 2026-09-12 chat-model entry's
+claim that `gpt-5.6-sol` needs the Responses API: it only rejected the default reasoning setting.
+
+`gpt-5.4-mini` and `gpt-5.5` were left off the list, and Terra and Sol were not benchmarked on the
+melody task (only a live chat answer each, and one hum on Terra). Revisit by running the benchmark
+on them before recommending anything but Luna, and if the open server needs a spend guard, since the
+picker lets any visitor pick Sol.
+
 ## 2026-10-15 — Conda env instead of uv
 
 Dropped `pyproject.toml`, `uv.lock` and `.python-version` for `environment.yml` (Python 3.13 from

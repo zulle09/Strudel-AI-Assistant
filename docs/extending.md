@@ -15,15 +15,28 @@ and the fix belongs in retrieval.
 
 ### Change the chat model
 
-`app/backend/core.py`:
+The person using the app picks the model from the dropdown above the composer.
+The choices live in `app/backend/models.py`, one entry per model:
 
 ```python
-model = init_chat_model("gpt-5.6-luna", model_provider="openai", reasoning_effort="none")
+"gpt-5.6-luna": {
+    "label": "GPT-5.6 Luna",
+    "note": "fastest and cheapest",
+    "kwargs": {"reasoning_effort": "none"},   # passed to init_chat_model
+},
 ```
 
-`init_chat_model` is provider-agnostic, so `("claude-sonnet-4-5",
-model_provider="anthropic")` works too given the right SDK and API key. No
-re-indexing — the chat model is unrelated to the embeddings.
+To add a model, add an entry. Check first that it does tool calling on Chat
+Completions and returns a plain string, since `run_llm` and `server.py` assume
+one (the 5.6 models only do tool calling with `reasoning_effort="none"`). Run
+the melody benchmark described in the comment in `core.py` before offering it.
+`DEFAULT_MODEL` is what is used when a request names none.
+
+Only ids in `MODELS` are ever passed to `init_chat_model`; the server answers
+400 to anything else, which keeps a client from choosing a model you did not
+list. `init_chat_model` is provider-agnostic, so an entry for another vendor
+works given the right SDK and API key. No re-indexing — the chat model is
+unrelated to the embeddings.
 
 ### Tune retrieval
 

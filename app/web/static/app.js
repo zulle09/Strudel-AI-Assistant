@@ -467,6 +467,44 @@ function addError(message, trace) {
 /* ================================ chat ================================= */
 
 const history = [];   // prior turns only; the pending question is sent separately
+
+/* The chat model is the person's choice. The list comes from the server, which
+ * also rejects any id that is not on it, so this only has to show the options
+ * and remember the last pick. Until the list loads (or if it fails), `model`
+ * stays null and the server uses its default.
+ */
+const modelSelect = $("model");
+const MODEL_KEY = "strudel.model";
+let model = null;
+
+async function loadModels() {
+  try {
+    const res = await fetch("/api/models");
+    const data = await res.json();
+    let saved = null;
+    try { saved = localStorage.getItem(MODEL_KEY); } catch (_) { /* private mode */ }
+
+    for (const m of data.models) {
+      const opt = document.createElement("option");
+      opt.value = m.id;
+      opt.textContent = `${m.label} - ${m.note}`;
+      modelSelect.appendChild(opt);
+    }
+    const ids = data.models.map((m) => m.id);
+    model = ids.includes(saved) ? saved : data.default;
+    modelSelect.value = model;
+  } catch (err) {
+    console.error("Couldn't load the model list", err);
+    modelSelect.closest(".composer__model").hidden = true;
+  }
+}
+
+modelSelect.addEventListener("change", () => {
+  model = modelSelect.value;
+  try { localStorage.setItem(MODEL_KEY, model); } catch (_) { /* private mode */ }
+});
+
+loadModels();
 let inFlight = false;
 
 async function ask(text) {
@@ -488,7 +526,7 @@ async function ask(text) {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text, history }),
+      body: JSON.stringify({ message: text, history, model }),
     });
     const data = await res.json().catch(() => ({}));
     thinking.remove();
@@ -958,6 +996,7 @@ async function handleRecordingStopped() {
     const wav = await blobToWav(blob);
     const body = new FormData();
     body.append("audio", wav, "hum.wav");
+    if (model) body.append("model", model);
 
     const res = await fetch("/api/hum", { method: "POST", body });
     const data = await res.json().catch(() => ({}));

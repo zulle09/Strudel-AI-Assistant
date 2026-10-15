@@ -31,11 +31,13 @@ APP_DIR = Path(__file__).resolve().parent
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
-from fastapi import FastAPI, File, UploadFile  # noqa: E402
+from fastapi import FastAPI, File, Form, UploadFile  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from markdown_it import MarkdownIt  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
+
+from backend.models import DEFAULT_MODEL, MODELS, public_list, resolve  # noqa: E402
 
 WEB_DIR = APP_DIR / "web"
 
@@ -100,6 +102,8 @@ class ChatRequest(BaseModel):
     # Prior turns, oldest first, NOT including `message` itself - this is what
     # lets the agent resolve follow-ups like "now add reverb to that".
     history: List[ChatTurn] = Field(default_factory=list)
+    # An id from GET /api/models; the default when omitted.
+    model: Optional[str] = None
 
 
 def _format_sources(context_docs: List[Any]) -> List[str]:
@@ -129,9 +133,27 @@ def _explain(exc: Exception) -> str:
             "Couldn't reach the Pinecone index. Check PINECONE_API_KEY in .env, and run "
             "`python app/ingestion.py` if the index is empty."
         )
+    if "insufficient_quota" in text or "credit" in text:
+        return "The OpenAI account is out of credits. Add credits at platform.openai.com, then ask again."
     if "rate limit" in text or "429" in text:
         return "The model API is rate limiting these requests. Wait a moment, then ask again."
     return f"{type(exc).__name__}: {exc}"
+
+
+@app.get("/api/models")
+def models() -> Any:
+    return {"default": DEFAULT_MODEL, "models": public_list()}
+
+
+def _bad_model(model_id: Optional[str]) -> Optional[JSONResponse]:
+    """A 400 response when the id is not on the allowlist, else None."""
+    try:
+        resolve(model_id)
+    except ValueError:
+        return JSONResponse(
+            {"error": f"Unknown model. Pick one of: {', '.join(MODELS)}."}, status_code=400
+        )
+    return None
 
 
 @app.post("/api/chat")
@@ -142,6 +164,8 @@ def chat(request: ChatRequest) -> Any:
     question = request.message.strip()
     if not question:
         return JSONResponse({"error": "Type a question first."}, status_code=400)
+    if (rejected := _bad_model(request.model)) is not None:
+        return rejected
 
     try:
         run_llm = _get_run_llm()
@@ -150,7 +174,7 @@ def chat(request: ChatRequest) -> Any:
             for turn in request.history
             if turn.role in ("user", "assistant")
         ]
-        result: Dict[str, Any] = run_llm(question, chat_history=history)
+        result: Dict[str, Any] = run_llm(question, chat_history=history, model_id=request.model)
     except Exception as exc:
         # print_exc rather than logging: it lands on stderr regardless of how
         # uvicorn's log config is set up, so the trace is never silently lost.
@@ -169,7 +193,7 @@ def chat(request: ChatRequest) -> Any:
 
 
 @app.post("/api/hum")
-def hum(audio: UploadFile = File(...)) -> Any:
+def hum(audio: UploadFile = File(...), model: Optional[str] = Form(None)) -> Any:
     """Recorded audio -> a transcribed melody -> a Strudel pattern.
 
     Two stages, and the response carries both. `pattern` is the literal
@@ -189,6 +213,9 @@ def hum(audio: UploadFile = File(...)) -> Any:
         to_pattern,
         transcribe,
     )
+
+    if (rejected := _bad_model(model)) is not None:
+        return rejected
 
     data = audio.file.read(MAX_UPLOAD_BYTES + 1)
     if not data:
@@ -218,7 +245,7 @@ def hum(audio: UploadFile = File(...)) -> Any:
     # throw away work the user cannot easily redo.
     try:
         run_llm = _get_run_llm()
-        result: Dict[str, Any] = run_llm(build_prompt(summary))
+        result: Dict[str, Any] = run_llm(build_prompt(summary), model_id=model)
     except Exception as exc:
         traceback.print_exc()
         return {
