@@ -421,7 +421,28 @@ function addThinking() {
   return el;
 }
 
-function addAnswer(html, sources) {
+/* A Copy button for the whole reply, as the model wrote it (raw markdown, so
+ * code fences and lists paste cleanly). The patterns inside have their own. */
+function buildCopyMessage(markdown) {
+  const tools = document.createElement("div");
+  tools.className = "msg__tools";
+  const btn = document.createElement("button");
+  btn.className = "btn btn--ghost btn--copy-msg";
+  btn.type = "button";
+  btn.textContent = "Copy message";
+  btn.addEventListener("click", async (ev) => {
+    try {
+      await navigator.clipboard.writeText(markdown);
+      note(ev.currentTarget, "Copied");
+    } catch (_) {
+      note(ev.currentTarget, "Blocked");
+    }
+  });
+  tools.appendChild(btn);
+  return tools;
+}
+
+function addAnswer(html, sources, markdown) {
   const el = document.createElement("div");
   el.className = "msg msg--bot";
 
@@ -432,6 +453,7 @@ function addAnswer(html, sources) {
   el.appendChild(prose);
 
   if (sources && sources.length) el.appendChild(buildSources(sources));
+  if (markdown) el.appendChild(buildCopyMessage(markdown));
 
   feed.appendChild(el);
   scrollDown();
@@ -537,7 +559,7 @@ async function ask(text) {
         data.trace
       );
     } else {
-      addAnswer(data.answer_html, data.sources);
+      addAnswer(data.answer_html, data.sources, data.answer_md);
       history.push({ role: "user", content: text });
       history.push({ role: "assistant", content: data.answer_md });
     }
@@ -1067,6 +1089,7 @@ function addHumAnswer(data) {
   }
 
   if (data.sources && data.sources.length) el.appendChild(buildSources(data.sources));
+  if (data.answer_md) el.appendChild(buildCopyMessage(data.answer_md));
 
   feed.appendChild(el);
   scrollDown();

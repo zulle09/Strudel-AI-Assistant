@@ -531,6 +531,12 @@ body[data-editor="open"] .editor-backdrop { opacity: 1; pointer-events: auto; }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
+.msg__tools {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
 .msg--error {
   border-left-color: var(--peak);
   color: var(--cream);
