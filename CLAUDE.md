@@ -41,8 +41,9 @@ python app/ingestion.py                         # rebuilds chunks.json + upserts
 No linter or formatter is configured. The frontend has no build step: edit `app/web/*` and reload
 the browser. Python changes need a server restart.
 
-The tests only cover `app/backend/melody.py`, using synthesised hums. The agent, retrieval, server
-and frontend have no tests. Checking them means a manual run with `OPENAI_API_KEY` and
+The tests cover `app/backend/melody.py` (synthesised hums) and the HTTP layer in `app/server.py`
+(`tests/test_server.py`, with `run_llm` stubbed so `backend.core` is never loaded). The agent,
+retrieval and frontend have no tests. Checking them means a manual run with `OPENAI_API_KEY` and
 `PINECONE_API_KEY` in `.env`.
 
 ## Decisions log

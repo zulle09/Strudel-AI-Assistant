@@ -271,7 +271,7 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
           <div>
             <h3>Turn your hums into regression tests</h3>
             <p class="why">Synthesized audio proves the pipeline works. Only labelled recordings of a voice prove it keeps working for one.</p>
-            <dl class="facts"><dt>How</dt><dd>Save five to ten takes, each with the melody you meant written beside it, as fixtures next to the realistic suite. Keep them in an ignored folder if the repository will be public.</dd><dt>Done when</dt><dd><code>uv run pytest</code> runs them alongside the existing 36 tests.</dd><dt>Depends on</dt><dd><a href='#s03'>03</a></dd></dl>
+            <dl class="facts"><dt>How</dt><dd>Save five to ten takes, each with the melody you meant written beside it, as fixtures next to the realistic suite. Keep them in an ignored folder if the repository will be public.</dd><dt>Done when</dt><dd><code>pytest</code> runs them alongside the existing 62 tests.</dd><dt>Depends on</dt><dd><a href='#s03'>03</a></dd></dl>
           </div>
         </article>
         <article class="step" id="s05">
@@ -434,11 +434,11 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
       </div>
             <div class="steps">
         <article class="step" id="s20">
-          <div class="step-meta"><span class="step-no">20</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">medium</span></div>
+          <div class="step-meta"><span class="step-no">20</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Partly done</span><span class="size">partly done 15 Oct</span></div>
           <div>
             <h3>Add tests beyond <code>melody.py</code></h3>
-            <p class="why">The agent, retrieval, server and frontend have no tests, so checking them means a manual run with API keys.</p>
-            <dl class="facts"><dt>How</dt><dd>Start with the server endpoints using a stubbed <code>run_llm</code>, then <code>repair_answer</code> and the sandbox report parser.</dd><dt>Done when</dt><dd><code>uv run pytest</code> exercises the server without network or keys.</dd></dl>
+            <p class="why">The server's HTTP layer is now covered by 26 tests in <code>tests/test_server.py</code>, with <code>run_llm</code> stubbed so nothing touches the network or <code>backend.core</code>: model validation, history filtering, HTML escaping, source de-duplication, error messages, and the hum endpoint's 400, 413, 422 and degrade-to-200 paths. Four deliberate bugs in <code>server.py</code> each failed exactly one test.</p>
+            <dl class="facts"><dt>Still untested</dt><dd>The agent loop, retrieval, the sandbox report parser in <code>validate_pattern</code>, and the frontend (including the model picker's JavaScript).</dd><dt>Done when</dt><dd>The sandbox parser and the picker are covered, and the agent and retrieval each have at least a smoke test.</dd></dl>
           </div>
         </article>
         <article class="step" id="s21">

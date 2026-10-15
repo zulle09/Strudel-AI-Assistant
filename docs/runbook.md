@@ -140,7 +140,7 @@ Roughly in order of how often each one turns out to be the cause:
 ## Tests
 
 ```bash
-pytest              # ~5s, no network or API keys needed, 36 tests
+pytest              # ~5s, no network or API keys needed, 62 tests
 ```
 
 This only exercises `app/backend/melody.py` against synthesized hums. It proves nothing about the
