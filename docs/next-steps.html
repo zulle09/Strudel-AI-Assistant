@@ -171,14 +171,14 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
 <body>
 <header class="rail">
   <div class="wordmark">Strudel<span class="tilde">~</span><span class="dim">Assistant</span></div>
-  <div class="rail-meta">next steps · after 9814eb9</div>
+  <div class="rail-meta">next steps · after 9d5bb31</div>
 </header>
 
 <div class="shell">
   <nav class="index" aria-label="Sections">
     <p class="index-title">Setlist</p>
     <ol>
-      <li><a href="#start"><span class="nm">Start here</span><span class="md">credits, then a hum</span></a></li>
+      <li><a href="#start"><span class="nm">Start here</span><span class="md">one test</span></a></li>
       <li><a href="#now"><span class="nm">Now</span><span class="md">01–03</span></a></li>
       <li><a href="#quality"><span class="nm">Hum quality</span><span class="md">04–07</span></a></li>
       <li><a href="#reliability"><span class="nm">Agent and reliability</span><span class="md">08–12</span></a></li>
@@ -194,10 +194,10 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
     <div class="intro">
       <span class="label">Next steps</span>
       <h1>StrudelAssistant Setlist</h1>
-      <p class="lede">What comes next for the web app, now that the iOS shell is gone. Three steps need you in person and nothing that calls the API can be tested until the first one is done. The rest can be handed off in almost any order.</p>
+      <p class="lede">What comes next for the web app, now that the iOS shell is gone. Credits are in and the model is switched to Luna. The main step that needs you is a real-voice hum, and the rest can be handed off in almost any order.</p>
       <div class="meta">
-        <span>follows <b>feat/hum-to-pattern</b> at <b>9814eb9</b></span>
-        <span><b>27</b> steps · <b>6</b> ideas · <b>6</b> need you</span>
+        <span>follows <b>feat/hum-to-pattern</b> at <b>9d5bb31</b></span>
+        <span><b>27</b> steps · <b>6</b> ideas · <b>2</b> done · <b>4</b> need you</span>
         <span>14 October 2026</span>
       </div>
     </div>
@@ -205,8 +205,8 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
     <div class="lead" id="start">
       <div>
         <span class="label">Start here</span>
-        <h2>Add credits, then hum into it</h2>
-        <p>The OpenAI account is out of credits, so the model cannot be called. Once it is topped up, a real voice is the one test that can overturn the tuning, and it takes fifteen minutes.</p>
+        <h2>Hum into it with a real voice</h2>
+        <p>Every transcription number so far comes from synthesized audio. A real voice is the one test that can overturn the tuning, and it takes fifteen minutes.</p>
         <ol>
           <li>Open the page in Safari or Chrome. Embedded previews block the microphone.</li>
           <li>Press the red dot, hum, press it again.</li>
@@ -233,19 +233,19 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
       <p class="prose">Credits and a real voice come first: nothing that calls the API can be tested without credits, and every accuracy number so far comes from synthesized audio.</p>
       <div class="steps">
         <article class="step" id="s01">
-          <div class="step-meta"><span class="step-no">01</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">5 min</span></div>
+          <div class="step-meta"><span class="step-no">01</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 14 Oct</span></div>
           <div>
             <h3>Add OpenAI credits</h3>
-            <p class="why">The account returned <code>insufficient_quota</code> on 14 October, so chat, hum and the benchmark all fail until it is topped up.</p>
-            <dl class="facts"><dt>Done when</dt><dd>A one-line tool-calling request to the chat model succeeds.</dd><dt>Unblocks</dt><dd><a href='#s02'>02</a>, <a href='#s03'>03</a> and everything that needs the API</dd></dl>
+            <p class="why">The account returned <code>insufficient_quota</code> on 14 October. Credits were added the same day.</p>
+            <dl class="facts"><dt>Result</dt><dd>Tool-calling requests succeed, and live <code>/api/chat</code> and <code>/api/hum</code> requests returned valid answers on the new model.</dd></dl>
           </div>
         </article>
         <article class="step" id="s02">
-          <div class="step-meta"><span class="step-no">02</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">small</span></div>
+          <div class="step-meta"><span class="step-no">02</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 14 Oct</span></div>
           <div>
-            <h3>Try <code>gpt-5.6-luna</code> in place of <code>gpt-5.4-mini</code></h3>
-            <p class="why">Third-party trackers put Luna near $0.20 / $1.20 per million tokens against $0.75 / $4.50 for the current model. That is unconfirmed, and so is whether Luna works on the Chat Completions path.</p>
-            <dl class="facts"><dt>How</dt><dd>Check tool calling with <code>init_chat_model</code>, then rerun the five-run melody benchmark recorded in the comment in <code>core.py</code>.</dd><dt>Done when</dt><dd>Luna scores 5/5 without needing the Responses API and the pricing page confirms the cost, or the decision log records why it stayed on <code>gpt-5.4-mini</code>.</dd><dt>Depends on</dt><dd><a href='#s01'>01</a></dd></dl>
+            <h3>Switch to <code>gpt-5.6-luna</code></h3>
+            <p class="why">Luna scored 5/5 on the melody benchmark, the same as <code>gpt-5.4-mini</code>, at $0.20 / $1.20 per million tokens against $0.75 / $4.50. It needs <code>reasoning_effort="none"</code> to use function tools on Chat Completions and still returns string content.</p>
+            <dl class="facts"><dt>Result</dt><dd><code>core.py</code> now uses it and <code>docs/decisions.md</code> records the benchmark. The benchmark covers one melody task, so plain Strudel questions and hard multi-step fixes are unmeasured. Raise <code>reasoning_effort</code> if answers get worse.</dd></dl>
           </div>
         </article>
         <article class="step" id="s03">
@@ -344,8 +344,8 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
           <div class="step-meta"><span class="step-no">12</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
           <div>
             <h3>Support the Responses API</h3>
-            <p class="why"><code>gpt-6-astra</code> and <code>gpt-5.6-sol</code> reject function tools on Chat Completions, and their replies arrive as content blocks that <code>run_llm</code> and the server treat as strings.</p>
-            <dl class="facts"><dt>Done when</dt><dd>Both run through the full pipeline. Re-benchmark before switching, since neither beat <code>gpt-5.4-mini</code> on this task.</dd></dl>
+            <p class="why"><code>gpt-6-astra</code> and <code>gpt-5.6-sol</code> reject function tools on Chat Completions, and their replies arrive as content blocks that <code>run_llm</code> and the server treat as strings. Luna did not need this, so it is only worth doing if a stronger model is wanted.</p>
+            <dl class="facts"><dt>Done when</dt><dd>Both run through the full pipeline. Re-benchmark before switching, since neither beat the cheaper models on this task.</dd></dl>
           </div>
         </article>
       </div>
@@ -524,7 +524,7 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
         <div class="idea" id="s33"><h3>33 · Measure it in use</h3><p>LangSmith tracing is already wired through environment variables, but nothing records latency, tool calls per answer, or how often validation changes the model's pattern.</p></div>
         </div>
 
-      <footer class="end">Grounded in the code at commit <code>9814eb9</code>. For how the pieces fit together, see <a href="architecture.md">docs/architecture.md</a>.</footer>
+      <footer class="end">Grounded in the code at commit <code>9d5bb31</code> plus the model switch. For how the pieces fit together, see <a href="architecture.md">docs/architecture.md</a>.</footer>
     </section>
   </main>
 </div>
