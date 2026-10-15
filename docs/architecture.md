@@ -441,8 +441,5 @@ Docs and config that disagree with the code:
   extending.md (and the traps above) say to commit it. A fresh clone has no dump,
   so retrieval quietly falls back to vector-only.
 - `.env.example` describes an `OPENAI_CHAT_MODEL` variable and a `search_web`
-  tool, and neither exists: the model is hardcoded in `core.py`. It also marks
+  tool, and neither exists: the model is chosen in the UI from `backend/models.py`. It also marks
   `PINECONE_API_KEY` optional, but the app needs it.
-- The `melody.py` module docstring and the diagram in humming.md still say tempo
-  comes from `beat_track`. `_estimate_tempo`'s docstring says 19 of 21 realistic
-  takes land within 10%, while commit d881504 and humming.md say 21 of 21.

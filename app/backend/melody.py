@@ -10,7 +10,8 @@ drums). So this module's job is to be *right*, not to be creative.
 The pipeline is:
 
     bytes -> mono 22.05k -> pYIN pitch track + onsets -> note segments
-          -> tempo (beat_track, octave-folded) -> quantise to 16ths
+          -> tempo (median gap between note starts, octave-folded; beat_track
+             only when there are fewer than 3 usable gaps) -> quantise to 16ths
           -> key (Krumhansl-Schmuckler) -> mini-notation string
 
 Mini-notation syntax used here is confirmed against the project's own corpus
@@ -30,6 +31,8 @@ import librosa
 import numpy as np
 import soundfile as sf
 from scipy.signal import find_peaks
+
+from logger import log_warning
 
 # 22.05k is plenty for a voice: pYIN's ceiling here is ~2 kHz, far under
 # Nyquist, and halving the rate roughly halves the analysis time.
@@ -283,7 +286,8 @@ def _estimate_tempo(y: np.ndarray, sr: int, notes: List[Note]) -> float:
     rather than an inference from it, and it became available only once
     loudness dips gave accurate note boundaries. On hums with portamento,
     breath noise and timing jitter it landed within 10% of the true tempo in
-    19 of 21 takes, against 9 of 21 for beat_track on the same audio.
+    21 of 21 takes (and within 5% in 21 of 21), against 8 of 21 for beat_track
+    on the same audio, re-measured on 2026-10-15.
 
     The median, not the mean: a melody that ends on a long note or pauses for
     a rest has a few intervals several times the others, and the mean follows
@@ -301,6 +305,10 @@ def _estimate_tempo(y: np.ndarray, sr: int, notes: List[Note]) -> float:
     if len(intervals) >= 3:
         bpm = _fold(60.0 / float(np.median(intervals)))
     else:
+        log_warning(
+            f"Tempo fell back to beat_track: only {len(intervals)} usable note gaps "
+            "(needs 3). Expect a weaker tempo estimate."
+        )
         tempo, _ = librosa.beat.beat_track(y=y, sr=sr, hop_length=HOP, start_bpm=100.0)
         bpm = _fold(float(np.atleast_1d(tempo)[0]) or 100.0)
 

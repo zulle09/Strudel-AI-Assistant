@@ -7,8 +7,8 @@ timing jitter, uneven loudness, room rumble and a singer drifting flat.
 Both of the numbers below moved because of this file. Segmenting on spectral
 flux found 4 of 6 note boundaries on a noisy take and collapsed every repeated
 note into one; segmenting on loudness dips finds them all. Tempo from
-beat_track landed within 10% in 9 of 21 takes; tempo from the median gap
-between note starts lands in 21 of 21.
+beat_track landed within 10% in 9 of 21 takes (8 of 21 when re-measured
+on 2026-10-15); tempo from the median gap between note starts lands in 21 of 21.
 
 Three seeds per case, and the bar is two of three: these signals are random,
 and demanding perfection from every seed would make the suite flaky rather
@@ -93,3 +93,15 @@ def test_repeated_notes_are_not_collapsed(results):
         assert len([n for n in summary["notes"] if n["note"] == "a3"]) >= 3, (
             f"repeated a3 collapsed: {[n['note'] for n in summary['notes']]}"
         )
+
+
+def test_beat_track_fallback_is_logged(capsys):
+    """Three notes make two gaps, below the three the median needs."""
+    transcribe(realistic_hum(["C4", "E4", "G4"], bpm=100, seed=1))
+    assert "fell back to beat_track" in capsys.readouterr().out
+
+
+def test_normal_takes_do_not_use_the_fallback(capsys):
+    name, notes, bpm, beat, _ = CASES[0]
+    transcribe(realistic_hum(notes, bpm=bpm, beat=beat, seed=1))
+    assert "beat_track" not in capsys.readouterr().out

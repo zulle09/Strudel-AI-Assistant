@@ -14,7 +14,7 @@ flowchart TD
     S --> T["transcribe()<br/>app/backend/melody.py"]
     T --> P["pYIN pitch track<br/>+ onset detection"]
     P --> N["note segments"]
-    N --> Q["beat_track → bpm<br/>quantise to 16ths"]
+    N --> Q["median note gap → bpm<br/>quantise to 16ths"]
     Q --> K["key<br/>Krumhansl-Schmuckler"]
     K --> J["summary JSON<br/>+ mini-notation"]
     J --> L["build_prompt()"]
@@ -109,7 +109,7 @@ quarters and eighths, three random seeds each on the realistic side.
 
 The realistic suite is what drove the two design decisions above. Before it,
 the same melodies with breath noise lost every repeated note and got the tempo
-right in 9 takes out of 21.
+right in 9 takes out of 21 (8 of 21 when re-measured on 2026-10-15).
 
 Half- and double-time readings remain possible and are survivable: note
 lengths are quantised against whatever tempo comes out, so the relative rhythm

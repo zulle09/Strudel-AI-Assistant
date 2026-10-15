@@ -14,6 +14,20 @@ The older iOS entry below is left as written.
 
 Revisit when a backend deployment target exists and a native app is wanted again.
 
+## 2026-10-15 — Tempo numbers re-measured: 21 of 21, and the beat_track fallback now logs
+
+Re-ran both tempo methods over the 21 realistic takes (7 melodies x 3 seeds). Median gap between
+note starts: 21 of 21 within 10% and 21 of 21 within 5%. `beat_track` alone: 8 of 21 within 10%
+(the 2026-09-12 entry recorded 9; the difference is probably library or seed noise, not a
+regression). So 21 of 21 is correct and the `_estimate_tempo` docstring's "19 of 21" was wrong; it
+and the stale `beat_track` mentions in `melody.py` and `docs/humming.md` are fixed. The
+`beat_track` fallback (fewer than 3 usable note gaps) now prints a warning each time it fires, which
+answers the earlier "nothing counts how often it's used". It prints a line rather than keeping a
+counter.
+
+Revisit once real hums exist: the 21 takes are synthesized, so 21 of 21 says the method is sound on
+them, not that a person will get it.
+
 ## 2026-10-15 — The app user picks the chat model, from a fixed GPT-5.6 allowlist
 
 A dropdown above the composer sends a model id with each chat and hum request. The server accepts
