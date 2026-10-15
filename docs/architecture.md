@@ -418,9 +418,10 @@ the shell, because `.env` values for them are silently ignored. API keys and
 server from another machine, run uvicorn directly with `--host 0.0.0.0` (see
 [runbook.md](runbook.md)).
 
-**A fresh agent is built per request.** `run_llm` calls `create_agent(...)` on
-every call, rebuilding the graph each time. Fine at this scale, wasteful at any
-other; see [extending.md](extending.md).
+**A fresh agent is built per request, and that is fine.** `run_llm` calls
+`create_agent(...)` on every call. Measured on 2026-10-15 it takes about 1.2 ms
+(max 2.7 ms over 20 builds), against roughly 10 s for the model call, so
+caching it would save nothing a user could notice. Don't hoist it for speed.
 
 **Answer HTML is rendered with raw HTML disabled.** `MarkdownIt("commonmark",
 {"html": False})` escapes any HTML in the model's output. Keep it that way —

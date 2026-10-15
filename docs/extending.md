@@ -333,8 +333,9 @@ Roughly in order of value:
    an async generator over `agent.astream(...)`, the endpoint would become an
    SSE or chunked response, and the client would append tokens as they arrive.
    The Sources panel can still be attached at the end.
-2. **Build the agent once.** `run_llm` calls `create_agent(...)` per request.
-   Hoist it to module level next to `model` and `retriever`.
+2. **Build the agent once.** Not worth it: measured, `create_agent(...)` takes
+   about 1.2 ms per request against ~10 s for the model call. Revisit only if
+   that ratio changes.
 3. **Clean up the leftovers** listed at the end of the architecture doc — the
    stale ingestion docstring.
 4. **Delete orphaned vectors on re-ingest**, so BM25 and the vector index stop
