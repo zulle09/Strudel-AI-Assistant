@@ -442,6 +442,24 @@ function buildCopyMessage(markdown) {
   return tools;
 }
 
+function buildDownloadRecording(wav) {
+  const btn = document.createElement("button");
+  btn.className = "btn btn--ghost btn--copy-msg";
+  btn.type = "button";
+  btn.textContent = "Download recording";
+  btn.addEventListener("click", (ev) => {
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, "").replace("T", "-");
+    const url = URL.createObjectURL(wav);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `hum-${stamp}.wav`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    note(ev.currentTarget, "Saved");
+  });
+  return btn;
+}
+
 function addAnswer(html, sources, markdown) {
   const el = document.createElement("div");
   el.className = "msg msg--bot";
@@ -1027,7 +1045,7 @@ async function handleRecordingStopped() {
     if (!res.ok || data.error) {
       addError(data.error || `The server returned ${res.status}.`, data.trace);
     } else {
-      addHumAnswer(data);
+      addHumAnswer(data, wav);
       // Only the model's own reply joins the history. The transcription is a
       // measurement, not something the user said, and putting its numbers in
       // the transcript would have follow-ups arguing with the tempo.
@@ -1043,7 +1061,7 @@ async function handleRecordingStopped() {
   }
 }
 
-function addHumAnswer(data) {
+function addHumAnswer(data, wav) {
   const el = document.createElement("div");
   el.className = "msg msg--bot";
 
@@ -1089,7 +1107,10 @@ function addHumAnswer(data) {
   }
 
   if (data.sources && data.sources.length) el.appendChild(buildSources(data.sources));
-  if (data.answer_md) el.appendChild(buildCopyMessage(data.answer_md));
+  const tools = data.answer_md ? buildCopyMessage(data.answer_md) : document.createElement("div");
+  tools.classList.add("msg__tools");
+  if (wav) tools.appendChild(buildDownloadRecording(wav));
+  el.appendChild(tools);
 
   feed.appendChild(el);
   scrollDown();

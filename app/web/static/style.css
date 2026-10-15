@@ -534,6 +534,7 @@ body[data-editor="open"] .editor-backdrop { opacity: 1; pointer-events: auto; }
 .msg__tools {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-top: 12px;
 }
 
