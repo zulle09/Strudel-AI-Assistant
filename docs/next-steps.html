@@ -197,7 +197,7 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
       <p class="lede">What comes next for the web app, now that the iOS shell is gone. Credits are in, the model is Luna, and retries and the startup warning are done. The main step that needs you is a real-voice hum, and the rest can be handed off in almost any order.</p>
       <div class="meta">
         <span>follows <b>feat/hum-to-pattern</b> at <b>9d5bb31</b></span>
-        <span><b>27</b> steps · <b>6</b> ideas · <b>4</b> done · <b>4</b> need you</span>
+        <span><b>27</b> steps · <b>6</b> ideas · <b>7</b> done · <b>4</b> need you</span>
         <span>14 October 2026</span>
       </div>
     </div>
@@ -291,11 +291,11 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
           </div>
         </article>
         <article class="step" id="s07">
-          <div class="step-meta"><span class="step-no">07</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div class="step-meta"><span class="step-no">07</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
           <div>
             <h3>Settle the tempo numbers and count the fallback</h3>
             <p class="why"><code>_estimate_tempo</code>'s docstring says 19 of 21 realistic takes land within 10%, while the commit and <code>docs/humming.md</code> say 21 of 21. The <code>melody.py</code> docstring and the humming diagram still say tempo comes from <code>beat_track</code>. Nothing counts how often the <code>beat_track</code> fallback fires.</p>
-            <dl class="facts"><dt>Done when</dt><dd>One number is true and quoted everywhere, the stale docstring and diagram are fixed, and the fallback path logs when it is used.</dd></dl>
+            <dl class="facts"><dt>Result</dt><dd>Re-measured on all 21 realistic takes: the median-gap method is 21 of 21 within 10% (also 21 of 21 within 5%) and <code>beat_track</code> alone is 8 of 21. The docstring, diagram and docs are corrected, and the fallback now prints a warning each time it fires, with two new tests.</dd></dl>
           </div>
         </article>
       </div>
@@ -317,11 +317,11 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
           </div>
         </article>
         <article class="step" id="s09">
-          <div class="step-meta"><span class="step-no">09</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div class="step-meta"><span class="step-no">09</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Closed</span><span class="size">closed 15 Oct</span></div>
           <div>
             <h3>Build the agent once</h3>
-            <p class="why"><code>run_llm</code> builds a new agent on every request, rebuilding its graph each time.</p>
-            <dl class="facts"><dt>Done when</dt><dd>One agent is built at startup and reused, with latency measured before and after.</dd></dl>
+            <p class="why"><code>run_llm</code> builds a new agent on every request. Measured: that takes about 1.2 ms (max 2.7 ms over 20 builds), against roughly 10 s for the model call.</p>
+            <dl class="facts"><dt>Result</dt><dd>Not worth changing. The comments and docs that called it wasteful are corrected. Revisit only if the ratio changes.</dd></dl>
           </div>
         </article>
         <article class="step" id="s10">
@@ -409,11 +409,11 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
           </div>
         </article>
         <article class="step" id="s18">
-          <div class="step-meta"><span class="step-no">18</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div class="step-meta"><span class="step-no">18</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
           <div>
             <h3>Make a failed ingestion batch fail loudly</h3>
-            <p class="why"><code>add_batch</code> logs each batch's exception itself, so the closing success line prints and the process exits 0 even when batches failed. <code>chunks.json</code> is written first, so BM25 ends up ahead of Pinecone.</p>
-            <dl class="facts"><dt>Done when</dt><dd>Any failed batch gives a non-zero exit and a summary of which batches failed.</dd></dl>
+            <p class="why"><code>add_batch</code> logged each batch's exception itself, so the closing success line printed and the process exited 0 even when batches failed. <code>chunks.json</code> is written first, so BM25 ends up ahead of Pinecone.</p>
+            <dl class="facts"><dt>Result</dt><dd>A failed batch now ends the run with the failed batch numbers and exit code 1. Checked against a stubbed Pinecone with no failures, two failures and all failing, not a real failed upload, which would be slow and paid.</dd></dl>
           </div>
         </article>
         <article class="step" id="s19">

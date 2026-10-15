@@ -14,6 +14,19 @@ The older iOS entry below is left as written.
 
 Revisit when a backend deployment target exists and a native app is wanted again.
 
+## 2026-10-15 — Don't cache the agent; make a failed ingestion batch exit 1
+
+Two small calls made together. The agent is still rebuilt on every request: `create_agent` measured
+1.2 ms median (2.7 ms max, 20 builds) against about 10 s for the model call, so the "build it once"
+idea in `docs/next-steps.html` and `docs/extending.md` had nothing to save, and a per-model cache
+would be extra state for no gain. Ingestion now treats any failed Pinecone batch as a failed run: it
+prints the failed batch numbers and exits 1, because the old code counted `Exception` objects that
+`add_batch` never let through and so always reported "all batches" as added.
+
+The ingestion change was checked against a stubbed Pinecone (all ok, two failures, all failing), not
+a real failed upload, since a real run is slow and paid. Revisit the agent cache if retrieval or the
+model call ever gets fast enough for 1 ms to matter.
+
 ## 2026-10-15 — Tempo numbers re-measured: 21 of 21, and the beat_track fallback now logs
 
 Re-ran both tempo methods over the 21 realistic takes (7 melodies x 3 seeds). Median gap between

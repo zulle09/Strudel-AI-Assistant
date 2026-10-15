@@ -90,10 +90,10 @@ Before running it:
 
 After running it:
 
-- Read the terminal output. A partial failure can look like success: batch upsert failures are
-  caught and logged per-batch, so the process exits 0 and still prints "Successfully added all
-  batches" even when some batches failed. Look for `Failed to add batch N/M` lines instead of
-  trusting the exit code.
+- Check the exit code and the last lines. If any Pinecone batch failed, the run ends with
+  "PIPELINE FINISHED WITH ERRORS", the failed batch numbers, and exit code 1. `chunks.json` is
+  already written by then, so it is ahead of the index until you re-run (safe: ids are content
+  hashes).
 - **Commit the new `data/chunks.json`** if this environment's copy is meant to be shared — it's
   gitignored, so nothing forces this, and a stale copy makes BM25 disagree with what's actually in
   Pinecone.

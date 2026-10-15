@@ -265,15 +265,17 @@ split.
 re-running ingestion over unchanged pages upserts the *same* vector rather than
 adding a duplicate. See the traps section for the flip side of this.
 
-**A partly failed upsert still reports success.** `add_batch` catches and logs
-each batch's exception itself, so `asyncio.gather` never sees one. The closing
-"Successfully added all batches" line prints even when some batches failed, and
-the process exits 0. The only evidence is the `Failed to add batch N/M` lines
-above it. `chunks.json` is written *before* the upsert, so a failed run leaves
-BM25 ahead of Pinecone.
+**A partly failed upsert exits 1.** `add_batch` catches each batch's exception
+and reports success as a bool, so `index_documents_async` returns the numbers of
+the batches that failed. If there are any, `main` prints them, says the run
+finished with errors, and the process exits 1. `chunks.json` is written *before*
+the upsert, so a failed run leaves BM25 ahead of Pinecone until you re-run.
+Re-running is safe: ids are content hashes, so batches that already succeeded
+are upserted onto themselves. This path is verified with a stubbed Pinecone,
+not with a real failure.
 
 **Importing `ingestion.py` has side effects too.** Import builds the embeddings
-client, the Pinecone store and three Tavily tools. It also sets `SSL_CERT_FILE`
+client, the Pinecone store and the Tavily crawl tool. It also sets `SSL_CERT_FILE`
 and `REQUESTS_CA_BUNDLE` in `os.environ`, which changes TLS for the whole
 process. Don't import it from the server or from tests. Nothing in the code
 creates the Pinecone index, so it has to exist before the first run.

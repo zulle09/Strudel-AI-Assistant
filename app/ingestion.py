@@ -22,6 +22,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -94,8 +95,11 @@ tavily_crawl = TavilyCrawl()
 
 
 
-async def main():
-    """Main async function to orchestrate the entire process."""
+async def main() -> int:
+    """Main async function to orchestrate the entire process.
+
+    Returns the process exit code: 0 on success, 1 if any Pinecone batch failed.
+    """
     log_header("DOCUMENTATION INGESTION PIPELINE")
 
     log_info(
@@ -180,15 +184,25 @@ async def main():
     # Process documents in batches asynchronously
     # Batched + concurrent, otherwise indexing thousands of chunks one HTTP call
     # at a time takes hours.
-    await index_documents_async(all_chunks, chunk_ids, batch_size=500) # depending on the size of the documents, you may want to adjust the batch size for optimal performance.
+    failed_batches = await index_documents_async(all_chunks, chunk_ids, batch_size=500) # depending on the size of the documents, you may want to adjust the batch size for optimal performance.
 
-    log_header("PIPELINE COMPLETE")
-    log_success("🎉 Documentation ingestion pipeline finished successfully!")
+    log_header("PIPELINE COMPLETE" if not failed_batches else "PIPELINE FINISHED WITH ERRORS")
+    if failed_batches:
+        # chunks.json was written above, so BM25 now has chunks that Pinecone
+        # is missing. Re-running is safe: ids are content hashes, so the batches
+        # that succeeded are upserted onto themselves.
+        log_error(
+            f"{len(failed_batches)} Pinecone batch(es) failed: {failed_batches}. "
+            "chunks.json is ahead of the index. Re-run ingestion to retry."
+        )
+    else:
+        log_success("🎉 Documentation ingestion pipeline finished successfully!")
     log_info("Summary:", Colors.BOLD)
     log_info(f"   • Crawled pages: {len(all_docs)}")
     log_info(f"   • Crawled-page chunks: {len(splitted_docs)}")
     log_info(f"   • API reference functions: {len(reference_docs)}")
-    log_info(f"   • Total chunks indexed: {len(all_chunks)}")
+    log_info(f"   • Total chunks submitted to the index: {len(all_chunks)}")
+    return 1 if failed_batches else 0
 
 
 
@@ -401,8 +415,13 @@ def _save_chunks(documents: List[Document], ids: List[str]) -> None:
     log_success(f"Chunk dump: Saved {len(payload)} chunks to {CHUNKS_PATH} (used by core.py for BM25 retrieval).")
 
 
-async def index_documents_async(documents: List[Document], ids: List[str], batch_size: int = 50) -> None:
-    """Process documents in batches asynchronously"""
+async def index_documents_async(
+    documents: List[Document], ids: List[str], batch_size: int = 50
+) -> List[int]:
+    """Process documents in batches asynchronously.
+
+    Returns the 1-based numbers of the batches that failed (empty when all succeeded).
+    """
     log_header("VECTOR STORAGE PHASE")
     log_info(
         f"VectorStore Indexing: Preparing to add {len(documents)} dicuments to vector store",
@@ -426,7 +445,7 @@ async def index_documents_async(documents: List[Document], ids: List[str], batch
     semaphore = asyncio.Semaphore(5)
 
     # Process all batches concurrently (bounded by the semaphore above)
-    async def add_batch(batch: List[Document], batch_ids: List[str], batch_number: int) -> None:
+    async def add_batch(batch: List[Document], batch_ids: List[str], batch_number: int) -> bool:
         async with semaphore:
             try:
                 # aadd_documents = embed + upsert, awaited so the event loop can run
@@ -435,25 +454,28 @@ async def index_documents_async(documents: List[Document], ids: List[str], batch
                 # of always inserting a fresh vector with a random uuid.
                 await vectorStore.aadd_documents(batch, ids=batch_ids)
                 log_success(f"VectorStore Indexing: Successfully added batch {batch_number + 1}/{len(batches)} to vector store.")
+                return True
             except Exception as e:
                 log_error(f"VectorStore Indexing: Failed to add batch {batch_number + 1}/{len(batches)}. Error: {str(e)}")
+                return False
 
-    # return_exceptions=True -> one failing batch does not cancel the others;
-    # failures come back as Exception objects and are counted below.
+    # add_batch catches its own exceptions and reports success as a bool (the old
+    # code counted Exception objects here, which never appeared, so a failed
+    # run still printed "added all batches"). One failing batch does not cancel
+    # the others.
     tasks = [add_batch(batch, id_batches[i], i) for i, batch in enumerate(batches)]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    results = await asyncio.gather(*tasks)
 
-    # Count successful batches
-    successful_batches = sum(1 for result in results if not isinstance(result, Exception))
-
-    if successful_batches == len(batches):
-        log_success(
-            f"VectorStore Indexing: Successfully added all batches to vector store."
+    failed = [number + 1 for number, ok in enumerate(results) if not ok]
+    if failed:
+        log_warning(
+            f"VectorStore Indexing: Added {len(batches) - len(failed)}/{len(batches)} batches. "
+            f"Failed: {failed}."
         )
     else:
-        log_warning(
-            f"VectorStore Indexing: Added {successful_batches}/{len(batches)} batches successfully. Some batches failed."
-        )
+        log_success("VectorStore Indexing: Successfully added all batches to vector store.")
+    return failed
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    sys.exit(asyncio.run(main()))
