@@ -5,15 +5,6 @@ that had real alternatives; skip routine work. Entries marked "(inferred — con
 reconstructed from code, comments and commit messages rather than a recorded decision — verify or
 delete them.
 
-## 2026-10-14 — Drop the iOS shell and the CORS allowlist; web app only
-
-Removed `mobile/` (Capacitor shell), `STRUDEL_API_BASE` in `app.js`, and the CORS middleware plus
-`STRUDEL_ALLOWED_ORIGINS` in `server.py`. The page and API are always same-origin now, so none of
-it has a job. Focus is the web app. The shell is recoverable from git history (added in `2d88161`).
-The older iOS entry below is left as written.
-
-Revisit when a backend deployment target exists and a native app is wanted again.
-
 ## 2026-10-15 — Don't cache the agent; make a failed ingestion batch exit 1
 
 Two small calls made together. The agent is still rebuilt on every request: `create_agent` measured
@@ -69,7 +60,7 @@ Cost: no lockfile, so installs are no longer reproducible; `pip` resolves the `>
 time. Revisit if a fresh `conda env create` ever pulls different versions from the ones in use, by
 adding `conda-lock` or an exported `conda env export` file.
 
-## 2026-10-14 — Chat model: `gpt-5.6-luna` with `reasoning_effort="none"`
+## 2026-10-15 — Chat model: `gpt-5.6-luna` with `reasoning_effort="none"`
 
 Supersedes the "stay on `gpt-5.4-mini`" entry below, which was written before credits were added.
 Five runs each on a 16-note, 4-cycle hum through the full pipeline: both models 5/5 clean
@@ -91,6 +82,15 @@ calling on the Chat Completions path nor the melody benchmark could be run. No m
 
 Revisit once credits are added: check Luna with `init_chat_model`, rerun the benchmark in the
 `core.py` comment, and swap only if it scores 5/5 without needing the Responses API.
+
+## 2026-10-14 — Drop the iOS shell and the CORS allowlist; web app only
+
+Removed `mobile/` (Capacitor shell), `STRUDEL_API_BASE` in `app.js`, and the CORS middleware plus
+`STRUDEL_ALLOWED_ORIGINS` in `server.py`. The page and API are always same-origin now, so none of
+it has a job. Focus is the web app. The shell is recoverable from git history (added in `2d88161`).
+The older iOS entry below is left as written.
+
+Revisit when a backend deployment target exists and a native app is wanted again.
 
 ## 2026-09-12 — Tempo from the median gap between note starts, not `beat_track`
 

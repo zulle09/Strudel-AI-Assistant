@@ -43,12 +43,12 @@ vectorstore = PineconeVectorStore(
 # `.slow(n)` is kept, no invalid variable assignment appears, and no unloaded
 # soundfont is used):
 #
-#     gpt-5.4-mini   5/5 clean    4.5s   (2026-09-12; 11.0s on 2026-10-14's 4-cycle hum)
+#     gpt-5.4-mini   5/5 clean    4.5s   (2026-09-12; 11.0s on 2026-10-15's 4-cycle hum)
 #     gpt-5.5        5/5 clean   12.6s
 #     gpt-6-astra    5/5 clean   10.1s
 #     gpt-5.6-sol    5/5 clean   24.3s
 #     gpt-4o-mini    1/5 clean    5.2s   - dropped `.slow(2)` in four runs
-#     gpt-5.6-luna   5/5 clean    9.5s   (2026-10-14, 4-cycle hum; $0.20 / $1.20 per M tokens)
+#     gpt-5.6-luna   5/5 clean    9.5s   (2026-10-15, 4-cycle hum; $0.20 / $1.20 per M tokens)
 #
 # The 5.6 models reject function tools on Chat Completions unless reasoning_effort is
 # "none" (models.py sets it); with that they return plain string content, so run_llm and

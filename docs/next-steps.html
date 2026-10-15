@@ -171,7 +171,7 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
 <body>
 <header class="rail">
   <div class="wordmark">Strudel<span class="tilde">~</span><span class="dim">Assistant</span></div>
-  <div class="rail-meta">next steps · after 9d5bb31</div>
+  <div class="rail-meta">next steps · after e084dfa</div>
 </header>
 
 <div class="shell">
@@ -186,6 +186,7 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
       <li><a href="#data"><span class="nm">Retrieval and data</span><span class="md">16–19</span></a></li>
       <li><a href="#housekeeping"><span class="nm">Tests and housekeeping</span><span class="md">20–24</span></a></li>
       <li><a href="#later"><span class="nm">Later</span><span class="md">25–27</span></a></li>
+      <li><a href="#shipped"><span class="nm">Shipped</span><span class="md">not numbered</span></a></li>
       <li><a href="#ideas"><span class="nm">Ideas</span><span class="md">28–33 · not commitments</span></a></li>
     </ol>
   </nav>
@@ -194,29 +195,30 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
     <div class="intro">
       <span class="label">Next steps</span>
       <h1>StrudelAssistant Setlist</h1>
-      <p class="lede">What comes next for the web app, now that the iOS shell is gone. Credits are in, the model is Luna, and retries and the startup warning are done. The main step that needs you is a real-voice hum, and the rest can be handed off in almost any order.</p>
+      <p class="lede">What comes next for the web app, now that the iOS shell is gone. The branch is merged, credits are in, and the app is on Luna with a model picker. The step that matters most now is recording takes, and the rest can be handed off in almost any order.</p>
       <div class="meta">
-        <span>follows <b>feat/hum-to-pattern</b> at <b>9d5bb31</b></span>
-        <span><b>27</b> steps · <b>6</b> ideas · <b>7</b> done · <b>4</b> need you</span>
-        <span>14 October 2026</span>
+        <span>merged to <b>main</b> at <b>e084dfa</b></span>
+        <span><b>27</b> steps · <b>6</b> ideas · <b>9</b> done · <b>3</b> need you</span>
+        <span>15 October 2026</span>
       </div>
     </div>
 
     <div class="lead" id="start">
       <div>
         <span class="label">Start here</span>
-        <h2>Hum into it with a real voice</h2>
-        <p>Every transcription number so far comes from synthesized audio. A real voice is the one test that can overturn the tuning, and it takes fifteen minutes.</p>
+        <h2>Record a take and look at what it heard</h2>
+        <p>Every accuracy number so far comes from synthesized audio. A recorded take is the one test that can overturn the tuning, and it takes fifteen minutes. Playing a pattern on strudel.cc into the Hum button works well because you know the source; a human voice is a separate test.</p>
         <ol>
           <li>Open the page in Safari or Chrome. Embedded previews block the microphone.</li>
-          <li>Press the red dot, hum, press it again.</li>
-          <li>Judge the panel labelled <em>As hummed</em> first. It involves no model.</li>
+          <li>Press the red dot, play or hum, press it again.</li>
+          <li>Judge the panel labelled <em>As hummed</em> first. It involves no model. Use Download recording to keep the take.</li>
         </ol>
       </div>
       <div class="right">
-<pre class="code">uv run python app/server.py
+<pre class="code"><span class="c"># in the StrudelAssistant conda env</span>
+python app/server.py
 <span class="c"># then open http://localhost:8000</span></pre>
-        <p class="note">For each take, note three things: did held notes shatter into repeats, did repeated notes merge into one, and was the tempo right, half or double.</p>
+        <p class="note">For each take, note three things (and which source pattern played, if any): did held notes shatter into repeats, did repeated notes merge into one, and was the tempo right, half or double.</p>
       </div>
     </div>
 
@@ -230,18 +232,18 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
         <span class="label">Now</span>
         <h2>Blocked on you</h2>
       </div>
-      <p class="prose">Credits and a real voice come first: nothing that calls the API can be tested without credits, and every accuracy number so far comes from synthesized audio.</p>
+      <p class="prose">Credits and the Luna switch are done. What is left here is recording takes, because every accuracy number so far comes from synthesized audio.</p>
       <div class="steps">
         <article class="step" id="s01">
-          <div class="step-meta"><span class="step-no">01</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 14 Oct</span></div>
+          <div class="step-meta"><span class="step-no">01</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
           <div>
             <h3>Add OpenAI credits</h3>
-            <p class="why">The account returned <code>insufficient_quota</code> on 14 October. Credits were added the same day.</p>
+            <p class="why">The account returned <code>insufficient_quota</code> on 14 October, so nothing that calls the API could be tested. Credits were added on 15 October.</p>
             <dl class="facts"><dt>Result</dt><dd>Tool-calling requests succeed, and live <code>/api/chat</code> and <code>/api/hum</code> requests returned valid answers on the new model.</dd></dl>
           </div>
         </article>
         <article class="step" id="s02">
-          <div class="step-meta"><span class="step-no">02</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 14 Oct</span></div>
+          <div class="step-meta"><span class="step-no">02</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
           <div>
             <h3>Switch to <code>gpt-5.6-luna</code></h3>
             <p class="why">Luna scored 5/5 on the melody benchmark, the same as <code>gpt-5.4-mini</code>, at $0.20 / $1.20 per million tokens against $0.75 / $4.50. It needs <code>reasoning_effort="none"</code> to use function tools on Chat Completions and still returns string content.</p>
@@ -251,9 +253,9 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
         <article class="step" id="s03">
           <div class="step-meta"><span class="step-no">03</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">15 min</span></div>
           <div>
-            <h3>Hum into it with a real voice</h3>
-            <p class="why">The transcription was tuned on synthesized hums. The realistic generator is a careful model of a voice, but it is still a model.</p>
-            <dl class="facts"><dt>How</dt><dd>Hum three takes: something slow with repeated notes, something fast, and a tune you know well. See Start here.</dd><dt>Done when</dt><dd>For each take you can say whether held notes shattered, whether repeated notes merged, and whether the tempo was right, half or double.</dd><dt>Unblocks</dt><dd><a href='#s04'>04</a> and <a href='#s05'>05</a></dd></dl>
+            <h3>Record real takes: a pattern on strudel.cc, and a human voice</h3>
+            <p class="why">The transcription was tuned on synthesized hums. Your usual test, playing a pattern on strudel.cc into the Hum button, gives ground truth because the source pattern is known, but it is synth audio through speakers and a room, not a voice. A human voice is still its own test.</p>
+            <dl class="facts"><dt>How</dt><dd>Record a few of each: a slow pattern with repeated notes, a fast one, and a tune you know well. Keep low notes above C2, because the transcriber's floor is C2 and laptop speakers often do not reproduce lower ones. Reverb (<code>.room</code>) smears note boundaries, so expect it to be harder. Use Download recording to keep each take.</dd><dt>Done when</dt><dd>For each take you can say whether held notes shattered, whether repeated notes merged, and whether the tempo was right, half or double.</dd><dt>Unblocks</dt><dd><a href='#s04'>04</a> and <a href='#s05'>05</a></dd></dl>
           </div>
         </article>
       </div>
@@ -269,9 +271,9 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
         <article class="step" id="s04">
           <div class="step-meta"><span class="step-no">04</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
           <div>
-            <h3>Turn your hums into regression tests</h3>
-            <p class="why">Synthesized audio proves the pipeline works. Only labelled recordings of a voice prove it keeps working for one.</p>
-            <dl class="facts"><dt>How</dt><dd>Save five to ten takes, each with the melody you meant written beside it, as fixtures next to the realistic suite. Keep them in an ignored folder if the repository will be public.</dd><dt>Done when</dt><dd><code>pytest</code> runs them alongside the existing 62 tests.</dd><dt>Depends on</dt><dd><a href='#s03'>03</a></dd></dl>
+            <h3>Turn your takes into regression tests</h3>
+            <p class="why">Synthesized audio proves the pipeline works. Only labelled real recordings prove it keeps working on them.</p>
+            <dl class="facts"><dt>How</dt><dd>Save five to ten takes from Download recording, each with the notes you meant (or the strudel.cc pattern that played) written beside it, as fixtures next to the realistic suite. The expected notes must come from you, not from the transcription, or the test only checks the code against itself. Keep recordings of your voice in an ignored folder if the repository will be public. Allowing one wrong note per take is likely more realistic than demanding an exact match.</dd><dt>Done when</dt><dd><code>pytest</code> runs them alongside the existing 64 tests.</dd><dt>Depends on</dt><dd><a href='#s03'>03</a></dd></dl>
           </div>
         </article>
         <article class="step" id="s05">
@@ -450,11 +452,11 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
           </div>
         </article>
         <article class="step" id="s22">
-          <div class="step-meta"><span class="step-no">22</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">tiny</span></div>
+          <div class="step-meta"><span class="step-no">22</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
           <div>
             <h3>Fix the ingestion docstring</h3>
-            <p class="why"><code>ingestion.py</code>'s module docstring says it crawls <code>python.langchain.com</code>. It crawls <code>strudel.cc</code>.</p>
-            <dl class="facts"><dt>Done when</dt><dd>The docstring is correct.</dd></dl>
+            <p class="why">The docs said <code>ingestion.py</code>'s module docstring claims it crawls <code>python.langchain.com</code>.</p>
+            <dl class="facts"><dt>Result</dt><dd>The docstring already described <code>strudel.cc</code> correctly. Only the stale "known rough edges" bullet in <code>docs/architecture.md</code> was wrong, and it is removed.</dd></dl>
           </div>
         </article>
         <article class="step" id="s23">
@@ -466,11 +468,11 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
           </div>
         </article>
         <article class="step" id="s24">
-          <div class="step-meta"><span class="step-no">24</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">about 1 h</span></div>
+          <div class="step-meta"><span class="step-no">24</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
           <div>
             <h3>Review and merge the branch</h3>
-            <p class="why">Thirteen commits of new subsystems sit on <code>feat/hum-to-pattern</code> and <code>main</code> has none of them. Each message explains why, so reading them in order is the fastest way in.</p>
-            <dl class="facts"><dt>How</dt><dd><code>gh pr create --base main --head feat/hum-to-pattern</code>. Merging after the reliability steps keeps the diff reviewable.</dd><dt>Done when</dt><dd>The branch is merged into <code>main</code>.</dd></dl>
+            <p class="why">The hum, agent and model-picker work sat on <code>feat/hum-to-pattern</code>, 24 commits ahead of <code>main</code>.</p>
+            <dl class="facts"><dt>Result</dt><dd>Merged as pull request #1, followed by #2 for the copy button. <code>origin</code> now points at <code>zulle09/Strudel-AI-Assistant</code>.</dd></dl>
           </div>
         </article>
       </div>
@@ -510,6 +512,21 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
       </div>
     </section>
 
+    <section id="shipped">
+      <div class="sec-head">
+        <span class="label">Shipped</span>
+        <h2>Done, but never a numbered step</h2>
+      </div>
+      <div class="ideas">
+        <div class="idea"><h3>Model picker</h3><p>A dropdown above the composer chooses between GPT-5.6 Luna (default), Terra and Sol. The server only accepts ids in <code>app/backend/models.py</code>. Terra and Sol have had one live answer each, not the melody benchmark.</p></div>
+        <div class="idea"><h3>Conda instead of uv</h3><p>The project runs from the <code>StrudelAssistant</code> conda env, described by <code>environment.yml</code>. There is no lockfile, so installs are not reproducible.</p></div>
+        <div class="idea"><h3>Copy message</h3><p>A button on each answer copies the reply as markdown. The patterns inside keep their own Copy button.</p></div>
+        <div class="idea"><h3>Download recording</h3><p>A hum result can save the 16 kHz WAV the server analysed, so real takes can become test fixtures (step 04).</p></div>
+        <div class="idea"><h3>Server tests</h3><p>26 tests cover the HTTP layer with a stubbed model. Part of step 20.</p></div>
+        <div class="idea"><h3>Web only</h3><p>The iOS shell and CORS were removed on 14 October. The shell is recoverable from commit <code>2d88161</code>.</p></div>
+      </div>
+    </section>
+
     <section id="ideas">
       <div class="sec-head">
         <span class="label">Ideas</span>
@@ -524,7 +541,7 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
         <div class="idea" id="s33"><h3>33 · Measure it in use</h3><p>LangSmith tracing is already wired through environment variables, but nothing records latency, tool calls per answer, or how often validation changes the model's pattern.</p></div>
         </div>
 
-      <footer class="end">Grounded in the code at commit <code>9d5bb31</code> plus the model switch. For how the pieces fit together, see <a href="architecture.md">docs/architecture.md</a>.</footer>
+      <footer class="end">Grounded in the code at commit <code>e084dfa</code>. For how the pieces fit together, see <a href="architecture.md">docs/architecture.md</a>.</footer>
     </section>
   </main>
 </div>

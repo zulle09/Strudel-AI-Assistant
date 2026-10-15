@@ -433,8 +433,6 @@ the answer text is derived from crawled third-party content.
 
 Present in the code as committed, none of them load-bearing:
 
-- `ingestion.py`'s module docstring says it crawls `python.langchain.com`. It
-  crawls `strudel.cc`.
 - `langsmith` looks unused but is not: LangChain picks it up through the `LANGSMITH_*`
   environment variables without an explicit import.
 
