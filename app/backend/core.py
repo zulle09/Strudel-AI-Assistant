@@ -1,5 +1,8 @@
 import json
 import os
+import shutil
+import subprocess
+import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional, cast
 
@@ -14,6 +17,7 @@ from langchain_core.documents import Document
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import OpenAIEmbeddings
 
+from backend.models import MODELS, resolve as resolve_model
 from logger import log_warning
 
 load_dotenv()
@@ -31,9 +35,50 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 vectorstore = PineconeVectorStore(
     index_name="strudel-doc-index", embedding=embeddings
 )
-# Provider-agnostic factory: change the string to switch model or vendor.
-# Initialize chat model
-model = init_chat_model("gpt-4o-mini", model_provider="openai")
+# The chat model is chosen per request from the allowlist in models.py. Instances are
+# built lazily and cached, one per id.
+#
+# Benchmarked on this app's own melody task (five runs each through the full
+# retrieval pipeline, scoring whether the transcribed melody survives verbatim,
+# `.slow(n)` is kept, no invalid variable assignment appears, and no unloaded
+# soundfont is used):
+#
+#     gpt-5.4-mini   5/5 clean    4.5s   (2026-09-12; 11.0s on 2026-10-14's 4-cycle hum)
+#     gpt-5.5        5/5 clean   12.6s
+#     gpt-6-astra    5/5 clean   10.1s
+#     gpt-5.6-sol    5/5 clean   24.3s
+#     gpt-4o-mini    1/5 clean    5.2s   - dropped `.slow(2)` in four runs
+#     gpt-5.6-luna   5/5 clean    9.5s   (2026-10-14, 4-cycle hum; $0.20 / $1.20 per M tokens)
+#
+# The 5.6 models reject function tools on Chat Completions unless reasoning_effort is
+# "none" (models.py sets it); with that they return plain string content, so run_llm and
+# server.py need no change. An earlier note here said Sol needed the Responses API. It
+# did not: the default reasoning setting was what it rejected.
+#
+# max_retries: the OpenAI client retries 429s and 5xx with exponential backoff, honouring
+# Retry-After, but defaults to 2 attempts. 5 rides out a short rate-limit window (about
+# 15s of waiting) before the request fails.
+_models: Dict[str, Any] = {}
+_models_lock = threading.Lock()
+
+
+def get_model(model_id: Optional[str] = None):
+    """The chat model for an allowlisted id (the default when None).
+
+    Raises ValueError for an id that is not on the list.
+    """
+    model_id = resolve_model(model_id)
+    if model_id not in _models:
+        with _models_lock:
+            if model_id not in _models:
+                _models[model_id] = init_chat_model(
+                    model_id,
+                    model_provider="openai",
+                    max_retries=5,
+                    **MODELS[model_id]["kwargs"],
+                )
+    return _models[model_id]
+
 
 # Chunk dump written by ingestion.py (app/ -> project root -> data/chunks.json).
 CHUNKS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "chunks.json"
@@ -60,7 +105,7 @@ def _build_retriever():
     if not local_chunks:
         log_warning(
             f"No local chunk dump found at {CHUNKS_PATH}: falling back to vector-only retrieval. "
-            "Run `uv run python app/ingestion.py` to enable hybrid BM25 + vector search."
+            "Run `python app/ingestion.py` to enable hybrid BM25 + vector search."
         )
         return vector_retriever
 
@@ -98,7 +143,111 @@ def retrieve_context(query: str):
     return serialized, retrieved_docs
 
 
-def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
+# app/backend/ -> app/ -> project root -> sandbox/
+SANDBOX_DIR = Path(__file__).resolve().parent.parent.parent / "sandbox"
+SANDBOX_ENTRY = SANDBOX_DIR / "validate.mjs"
+
+# A query over four cycles is arithmetic; a second is already generous. The
+# ceiling exists for the pattern that loops forever, not for the slow one.
+SANDBOX_TIMEOUT_SEC = 20
+
+# Node's permission model, verified against this sandbox: without these flags
+# evaluated code writes to the filesystem and opens sockets freely, and with
+# them filesystem writes, network and subprocesses are all denied. Read access
+# is granted only to the sandbox directory, which is where its own modules
+# live. See docs/humming.md.
+SANDBOX_FLAGS = ["--permission", f"--allow-fs-read={SANDBOX_DIR}"]
+
+
+def _sandbox_problem() -> Optional[str]:
+    """Why the validator can't run, or None when it can."""
+    if not shutil.which("node"):
+        return "Node.js is not installed"
+    if not SANDBOX_ENTRY.exists() or not (SANDBOX_DIR / "node_modules").exists():
+        return "the sandbox is not installed (run `npm install` in sandbox/)"
+    return None
+
+
+@tool
+def validate_pattern(code: str) -> str:
+    """Run a Strudel pattern and report whether it works.
+
+    Use this on every pattern you write, before giving it to the user. It
+    evaluates the code the way the Strudel REPL would and returns either what
+    the pattern does (how many events, which sounds, which notes) or the exact
+    error. If it reports an error or a warning, fix the pattern and validate
+    again. If it says a function is not defined, search the documentation for
+    the right name rather than guessing.
+
+    Args:
+        code: The complete pattern, exactly as you would give it to the user.
+    """
+    problem = _sandbox_problem()
+    if problem:
+        return (
+            f"The validator is unavailable: {problem}. "
+            "Answer from the documentation alone and say the pattern is unverified."
+        )
+
+    try:
+        finished = subprocess.run(
+            ["node", *SANDBOX_FLAGS, str(SANDBOX_ENTRY)],
+            input=code,
+            capture_output=True,
+            text=True,
+            timeout=SANDBOX_TIMEOUT_SEC,
+            cwd=SANDBOX_DIR,
+        )
+    except subprocess.TimeoutExpired:
+        return (
+            f"The pattern did not finish within {SANDBOX_TIMEOUT_SEC} seconds. "
+            "Something in it loops forever. Simplify it and try again."
+        )
+
+    try:
+        report = json.loads(finished.stdout)
+    except json.JSONDecodeError:
+        # The sandbox writes JSON on stdout and everything else on stderr, so
+        # this means it died before it could report - a crash, not a bad pattern.
+        detail = (finished.stderr or "").strip().splitlines()
+        return "The validator crashed: " + (detail[-1] if detail else "no output.")
+
+    if not report.get("ok"):
+        return (
+            f"INVALID ({report.get('stage', 'unknown')} stage): {report.get('error')}\n"
+            "Fix the pattern and validate it again."
+        )
+
+    lines = [
+        f"VALID. Over {report['cycles_queried']} cycles it produces "
+        f"{report['events']} events."
+    ]
+    if report.get("sounds"):
+        lines.append(f"Sounds used: {', '.join(report['sounds'])}.")
+    if report.get("distinct_notes"):
+        lines.append(f"Distinct notes: {report['distinct_notes']}.")
+    if report.get("cpm") is not None:
+        lines.append(f"Tempo: {report['cpm']} cycles per minute.")
+    for warning in report.get("warnings", []):
+        lines.append(f"WARNING: {warning} Fix this and validate again.")
+    return " ".join(lines)
+
+
+# Said once, when the server first loads this module (at startup, via the prewarm
+# thread), so a missing sandbox shows in the log instead of only in answers.
+_startup_problem = _sandbox_problem()
+if _startup_problem:
+    log_warning(
+        f"Pattern validator disabled: {_startup_problem}. "
+        "The agent will answer without checking its patterns."
+    )
+
+
+def run_llm(
+    query: str,
+    chat_history: Optional[List[Dict[str, str]]] = None,
+    model_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     Run the RAG pipeline to answer a query using retrieved documentation.
 
@@ -109,6 +258,7 @@ def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> 
             follow-ups ("and how do I add reverb to that?") against what was
             already discussed - without it every question was answered in
             isolation, so the retriever had no way to know what "that" referred to.
+        model_id: An id from backend.models.MODELS; the default when omitted.
 
     Returns:
         Dictionary containing:
@@ -130,6 +280,15 @@ def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> 
         "ground truth for exact syntax, parameter types, and synonyms (e.g. `cutoff`/`ctf`/`lp` are all "
         "synonyms of `lpf`) - trust them over your own prior knowledge of Strudel/TidalCycles, which may "
         "be outdated or refer to a different version.\n\n"
+        "You have two tools and they are meant to be used in a loop, not once "
+        "each. `retrieve_context` is how you learn; `validate_pattern` is how "
+        "you check what you wrote. A typical turn looks like: search the docs, "
+        "write a pattern, validate it, read the error, search for the function "
+        "you got wrong, fix it, validate again. Keep going until it comes back "
+        "VALID with no warnings. Do not present a pattern you have not "
+        "validated, and never argue with the validator - it runs the real "
+        "Strudel engine, so if it says a function does not exist, it does not "
+        "exist, whatever you remember.\n\n"
         "You handle two kinds of requests:\n"
         "- Questions/explanations (\"what does lpf do?\", \"how does mini-notation work?\") -> answer in "
         "prose, citing sources.\n"
@@ -142,6 +301,10 @@ def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> 
         "Rules:\n"
         "- Always call `retrieve_context` before answering any question about Strudel syntax, functions, "
         "or concepts, and before writing or modifying any pattern - never rely on memory alone.\n"
+        "- Always call `validate_pattern` on the complete pattern before you present it, and again after "
+        "every change you make to it. If it reports INVALID or a WARNING, that is not advice - fix it and "
+        "re-validate. Give up only after three failed attempts, and then say plainly what the validator "
+        "reported rather than presenting the broken pattern as if it worked.\n"
         "- If the first retrieval doesn't clearly answer the question, call the tool again with a "
         "rephrased query, a likely function name, or a synonym, before giving up.\n"
         "- Use only functions and syntax that appear in the retrieved documentation, written as valid "
@@ -154,9 +317,13 @@ def run_llm(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> 
         "- Keep answers concise and practical, favoring a runnable example over a long explanation."
     )
     
-    # A fresh agent per call. In production build it once at module level - this
-    # rebuilds the graph on every request.
-    agent = create_agent(model, tools=[retrieve_context], system_prompt=system_prompt)
+    # A fresh agent per call. Measured at about 1.2 ms (2026-10-15) against ~10 s
+    # for the model call, so caching it would buy nothing.
+    agent = create_agent(
+        get_model(model_id),
+        tools=[retrieve_context, validate_pattern],
+        system_prompt=system_prompt,
+    )
     
     # Prior turns first (only role/content survive - the UI-only "sources" key
     # main.py stores alongside each message must not leak into the agent

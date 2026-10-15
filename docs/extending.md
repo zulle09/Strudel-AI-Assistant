@@ -15,15 +15,28 @@ and the fix belongs in retrieval.
 
 ### Change the chat model
 
-`app/backend/core.py`:
+The person using the app picks the model from the dropdown above the composer.
+The choices live in `app/backend/models.py`, one entry per model:
 
 ```python
-model = init_chat_model("gpt-4o-mini", model_provider="openai")
+"gpt-5.6-luna": {
+    "label": "GPT-5.6 Luna",
+    "note": "fastest and cheapest",
+    "kwargs": {"reasoning_effort": "none"},   # passed to init_chat_model
+},
 ```
 
-`init_chat_model` is provider-agnostic, so `("claude-sonnet-4-5",
-model_provider="anthropic")` works too given the right SDK and API key. No
-re-indexing — the chat model is unrelated to the embeddings.
+To add a model, add an entry. Check first that it does tool calling on Chat
+Completions and returns a plain string, since `run_llm` and `server.py` assume
+one (the 5.6 models only do tool calling with `reasoning_effort="none"`). Run
+the melody benchmark described in the comment in `core.py` before offering it.
+`DEFAULT_MODEL` is what is used when a request names none.
+
+Only ids in `MODELS` are ever passed to `init_chat_model`; the server answers
+400 to anything else, which keeps a client from choosing a model you did not
+list. `init_chat_model` is provider-agnostic, so an entry for another vendor
+works given the right SDK and API key. No re-indexing — the chat model is
+unrelated to the embeddings.
 
 ### Tune retrieval
 
@@ -70,7 +83,7 @@ dependency and `TAVILY_API_KEY` is already in `.env`.
 ### Re-index after changing what gets ingested
 
 ```bash
-uv run python app/ingestion.py
+python app/ingestion.py
 ```
 
 Long-running and paid. It rewrites `data/chunks.json` and upserts to Pinecone.
@@ -251,7 +264,7 @@ the page out at zero offset.
 ### Run it
 
 ```bash
-uv run python app/server.py
+python app/server.py
 ```
 
 Serves on `:8000`, or `PORT` if set. Launching by file path matters: it puts
@@ -288,7 +301,7 @@ is set up.
 To get the same trace in the browser, start the server in debug mode:
 
 ```bash
-STRUDEL_DEBUG=1 uv run python app/server.py
+STRUDEL_DEBUG=1 python app/server.py
 ```
 
 The failed message then carries a collapsible **Traceback** block. Leave it off
@@ -320,11 +333,11 @@ Roughly in order of value:
    an async generator over `agent.astream(...)`, the endpoint would become an
    SSE or chunked response, and the client would append tokens as they arrive.
    The Sources panel can still be attached at the end.
-2. **Build the agent once.** `run_llm` calls `create_agent(...)` per request.
-   Hoist it to module level next to `model` and `retriever`.
+2. **Build the agent once.** Not worth it: measured, `create_agent(...)` takes
+   about 1.2 ms per request against ~10 s for the model call. Revisit only if
+   that ratio changes.
 3. **Clean up the leftovers** listed at the end of the architecture doc — the
-   stale ingestion docstring, the unused `Chroma` import, `flask` and
-   `tavily-python` in `pyproject.toml`.
+   stale ingestion docstring.
 4. **Delete orphaned vectors on re-ingest**, so BM25 and the vector index stop
    drifting apart. Ingestion already knows every current id; anything else in
    the index is stale.

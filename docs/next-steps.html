@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>StrudelAssistant Setlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Same rack as the Signal Chain page: black anodised by default, brushed
+   aluminium in light mode. Tokens only; components never name a colour. */
+:root{
+  --ground:#14100D;--ground-2:#1A1512;--panel:#1F1915;--pill:#2A2320;--code-bg:#171310;
+  --text:#EFE6D6;--muted:#B4A99B;--faint:#918779;
+  --edge:rgba(239,230,214,.10);--edge-strong:rgba(239,230,214,.24);
+  --amber:#F2A03D;--amber-wash:rgba(242,160,61,.13);
+  --mint:#7FD1AE;
+  --f-label:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --ground:#E4E1DB;--ground-2:#DBD7D0;--panel:#EFEDE8;--pill:#F7F5F1;--code-bg:#E9E6E0;
+    --text:#1D1812;--muted:#4A4239;--faint:#645B51;
+    --edge:rgba(29,24,18,.12);--edge-strong:rgba(29,24,18,.28);
+    --amber:#8C4F06;--amber-wash:rgba(140,79,6,.10);
+    --mint:#17684C;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --ground:#E4E1DB;--ground-2:#DBD7D0;--panel:#EFEDE8;--pill:#F7F5F1;--code-bg:#E9E6E0;
+  --text:#1D1812;--muted:#4A4239;--faint:#645B51;
+  --edge:rgba(29,24,18,.12);--edge-strong:rgba(29,24,18,.28);
+  --amber:#8C4F06;--amber-wash:rgba(140,79,6,.10);
+  --mint:#17684C;
+  color-scheme:light;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--text);font:400 15.5px/1.65 var(--f-body)}
+a{color:inherit;text-decoration-color:var(--edge-strong);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--amber)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:2px}
+code{font-family:var(--f-mono);font-size:.87em}
+p code,li code,dd code,figcaption code{background:var(--pill);border:1px solid var(--edge);padding:0 .32em;border-radius:3px;white-space:nowrap}
+
+.rail{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 40px;border-bottom:1px solid var(--edge);background:linear-gradient(180deg,var(--panel),var(--ground-2))}
+.wordmark{font:700 13px/1 var(--f-label);letter-spacing:.22em;text-transform:uppercase}
+.wordmark .tilde{color:var(--amber);letter-spacing:0;margin:0 .4em}
+.wordmark .dim{color:var(--muted)}
+.rail-meta{font:500 12px/1 var(--f-mono);color:var(--faint)}
+
+.shell{display:grid;grid-template-columns:196px minmax(0,1fr);gap:56px;max-width:1300px;margin:0 auto;padding:44px 40px 120px}
+.index{position:sticky;top:28px;align-self:start}
+.index-title{font:600 11px/1 var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 12px 12px}
+.index ol{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+.index a{display:grid;padding:7px 12px;border-radius:4px;text-decoration:none}
+.index a:hover{background:var(--panel)}
+.index .nm{font:600 12.5px/1.25 var(--f-label);letter-spacing:.09em;text-transform:uppercase}
+.index .md{font:400 11px/1.45 var(--f-mono);color:var(--faint)}
+
+main{min-width:0}
+.intro{max-width:780px}
+.label{font:600 11.5px/1 var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+h1{font:700 clamp(34px,4.6vw,50px)/1.04 var(--f-label);letter-spacing:-.012em;margin:14px 0 16px;text-wrap:balance}
+.lede{font-size:18px;line-height:1.55;color:var(--muted);max-width:60ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:18px;font:400 12px/1.4 var(--f-mono);color:var(--faint)}
+.meta b{font-weight:500;color:var(--text)}
+
+/* the one lifted object on the page: where to start */
+.lead{margin:32px 0 0;background:var(--panel);border:1px solid var(--amber);border-radius:5px;padding:24px 26px;max-width:980px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 36px}
+.lead h2{font:700 26px/1.15 var(--f-label);margin:10px 0 10px;text-wrap:balance}
+.lead p{margin:0 0 10px;color:var(--muted);font-size:15px}
+.lead ol{margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;display:grid;gap:4px}
+.lead .right{align-self:center}
+.lead pre.code{margin-top:0}
+
+.counts{list-style:none;padding:0;margin:18px 0 0;display:flex;flex-wrap:wrap;border:1px solid var(--edge);border-radius:5px;background:var(--panel);overflow:hidden;max-width:980px}
+.counts li{flex:1 1 170px;padding:12px 16px;border-right:1px solid var(--edge);border-bottom:1px solid var(--edge);margin:0 -1px -1px 0;display:grid;gap:3px}
+.counts a{text-decoration:none;display:grid;gap:3px}
+.counts .h{font:600 12px/1.2 var(--f-label);letter-spacing:.12em;text-transform:uppercase}
+.counts .v{font-size:13.5px;color:var(--muted)}
+.counts .v b{font:500 13px var(--f-mono);color:var(--mint);font-variant-numeric:tabular-nums}
+
+section{padding-top:72px;scroll-margin-top:12px}
+.sec-head{display:grid;gap:10px;margin-bottom:14px;max-width:780px}
+h2{font:700 30px/1.12 var(--f-label);letter-spacing:-.005em;margin:0;text-wrap:balance}
+.prose{max-width:68ch;margin:0}
+.prose p{margin:0 0 14px}
+.note{font-size:13.5px;line-height:1.55;color:var(--muted);max-width:74ch;margin:10px 0 0}
+
+figure{margin:24px 0 6px;max-width:980px}
+.fig{background:var(--panel);border:1px solid var(--edge);border-radius:5px;padding:22px;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:760px}
+figcaption{font-size:13.5px;line-height:1.55;color:var(--muted);max-width:76ch;margin-top:10px}
+
+.sv text{fill:var(--text);font-family:var(--f-body)}
+.sv .tt{font:600 13px var(--f-label);letter-spacing:.02em}
+.sv .ts{font:400 10.5px var(--f-mono);fill:var(--muted)}
+.sv .te{font:400 11px var(--f-body);fill:var(--faint)}
+.sv .box{fill:var(--ground);stroke:var(--edge-strong);stroke-width:1}
+.sv .lit{stroke:var(--amber);stroke-width:1.5}
+.sv .goal{fill:none;stroke:var(--muted);stroke-width:1.25;stroke-dasharray:5 4}
+.sv .ln{fill:none;stroke:var(--faint);stroke-width:1.25}
+.sv .ah{fill:var(--faint)}
+
+/* a step: a row, not a card */
+.steps{max-width:980px;margin-top:8px}
+.step{display:grid;grid-template-columns:132px minmax(0,1fr);gap:0 30px;padding:26px 0;border-top:1px solid var(--edge)}
+.step-meta{display:grid;gap:10px;align-content:start}
+.step-no{font:500 26px/1 var(--f-mono);color:var(--faint);font-variant-numeric:tabular-nums}
+.owner{display:inline-flex;align-items:center;gap:8px;font:600 11.5px/1 var(--f-label);letter-spacing:.12em;text-transform:uppercase}
+.lamp{width:9px;height:9px;border-radius:50%;flex:none;background:var(--amber);box-shadow:0 0 0 3px var(--amber-wash)}
+.lamp.off{background:transparent;border:1.5px solid var(--faint);box-shadow:none}
+.owner.handoff{color:var(--muted)}
+.size{font:400 12px/1.4 var(--f-mono);color:var(--faint)}
+.step h3{font:700 21px/1.2 var(--f-label);letter-spacing:.005em;margin:0 0 8px;text-wrap:balance}
+.step .why{margin:0;max-width:68ch;color:var(--muted)}
+.facts{display:grid;grid-template-columns:minmax(96px,120px) minmax(0,1fr);margin:14px 0 0;max-width:780px}
+.facts dt,.facts dd{margin:0;padding:8px 0;border-top:1px solid var(--edge)}
+.facts dt{font:600 11.5px/1.7 var(--f-label);letter-spacing:.11em;text-transform:uppercase;color:var(--faint);padding-right:16px}
+.facts dd{font-size:14.5px;line-height:1.55}
+.facts dd a{font-family:var(--f-mono);font-size:.92em}
+pre.code{margin:12px 0 0;background:var(--code-bg);border:1px solid var(--edge);border-radius:5px;padding:12px 16px;overflow-x:auto;font:400 12.8px/1.65 var(--f-mono);color:var(--text);max-width:780px}
+pre.code .c{color:var(--faint)}
+.checks{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}
+.checks li{display:grid;grid-template-columns:12px minmax(0,1fr);gap:12px;align-items:baseline}
+.checks li::before{content:"";width:8px;height:8px;border-radius:50%;border:1.5px solid var(--faint);transform:translateY(-1px)}
+
+.ideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0 36px;max-width:1000px;margin-top:8px}
+.idea{border-top:1px solid var(--edge);padding:16px 0 20px}
+.idea h3{font:600 16px/1.35 var(--f-body);margin:0 0 6px}
+.idea p{margin:0;font-size:14.5px;line-height:1.55;color:var(--muted)}
+
+footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);font-size:13.5px;color:var(--faint);max-width:780px}
+
+@media (max-width:1080px){
+  .shell{grid-template-columns:1fr;gap:10px;padding:28px 20px 96px}
+  .index{position:static}
+  .index-title{margin-left:0}
+  .index ol{display:flex;flex-wrap:wrap;gap:6px}
+  .index a{border:1px solid var(--edge);padding:6px 10px}
+  .index .md{display:none}
+  .rail{padding:12px 20px}
+}
+@media (max-width:760px){
+  .lead{grid-template-columns:1fr;padding:20px}
+  .step{grid-template-columns:1fr;gap:12px}
+  .step-meta{grid-template-columns:auto auto 1fr;align-items:center;gap:14px}
+  .step-no{font-size:20px}
+}
+@media (max-width:640px){
+  body{font-size:15px}
+  h2{font-size:25px}
+  .lede{font-size:16.5px}
+  .fig{padding:14px}
+  .rail-meta{display:none}
+  .facts{grid-template-columns:1fr}
+  .facts dt{padding-bottom:0}
+  .facts dd{border-top:0;padding-top:2px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="rail">
+  <div class="wordmark">Strudel<span class="tilde">~</span><span class="dim">Assistant</span></div>
+  <div class="rail-meta">next steps · after 9d5bb31</div>
+</header>
+
+<div class="shell">
+  <nav class="index" aria-label="Sections">
+    <p class="index-title">Setlist</p>
+    <ol>
+      <li><a href="#start"><span class="nm">Start here</span><span class="md">one test</span></a></li>
+      <li><a href="#now"><span class="nm">Now</span><span class="md">01–03</span></a></li>
+      <li><a href="#quality"><span class="nm">Hum quality</span><span class="md">04–07</span></a></li>
+      <li><a href="#reliability"><span class="nm">Agent and reliability</span><span class="md">08–12</span></a></li>
+      <li><a href="#validation"><span class="nm">Validation correctness</span><span class="md">13–15</span></a></li>
+      <li><a href="#data"><span class="nm">Retrieval and data</span><span class="md">16–19</span></a></li>
+      <li><a href="#housekeeping"><span class="nm">Tests and housekeeping</span><span class="md">20–24</span></a></li>
+      <li><a href="#later"><span class="nm">Later</span><span class="md">25–27</span></a></li>
+      <li><a href="#ideas"><span class="nm">Ideas</span><span class="md">28–33 · not commitments</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="intro">
+      <span class="label">Next steps</span>
+      <h1>StrudelAssistant Setlist</h1>
+      <p class="lede">What comes next for the web app, now that the iOS shell is gone. Credits are in, the model is Luna, and retries and the startup warning are done. The main step that needs you is a real-voice hum, and the rest can be handed off in almost any order.</p>
+      <div class="meta">
+        <span>follows <b>feat/hum-to-pattern</b> at <b>9d5bb31</b></span>
+        <span><b>27</b> steps · <b>6</b> ideas · <b>7</b> done · <b>4</b> need you</span>
+        <span>14 October 2026</span>
+      </div>
+    </div>
+
+    <div class="lead" id="start">
+      <div>
+        <span class="label">Start here</span>
+        <h2>Hum into it with a real voice</h2>
+        <p>Every transcription number so far comes from synthesized audio. A real voice is the one test that can overturn the tuning, and it takes fifteen minutes.</p>
+        <ol>
+          <li>Open the page in Safari or Chrome. Embedded previews block the microphone.</li>
+          <li>Press the red dot, hum, press it again.</li>
+          <li>Judge the panel labelled <em>As hummed</em> first. It involves no model.</li>
+        </ol>
+      </div>
+      <div class="right">
+<pre class="code">uv run python app/server.py
+<span class="c"># then open http://localhost:8000</span></pre>
+        <p class="note">For each take, note three things: did held notes shatter into repeats, did repeated notes merge into one, and was the tempo right, half or double.</p>
+      </div>
+    </div>
+
+    <ul class="counts" aria-label="Steps by group">
+      <li><a href="#now"><span class="h">Now</span><span class="v"><b>3</b> steps</span></a></li><li><a href="#quality"><span class="h">Hum quality</span><span class="v"><b>4</b> steps</span></a></li><li><a href="#reliability"><span class="h">Agent and reliability</span><span class="v"><b>5</b> steps</span></a></li><li><a href="#validation"><span class="h">Validation correctness</span><span class="v"><b>3</b> steps</span></a></li><li><a href="#data"><span class="h">Retrieval and data</span><span class="v"><b>4</b> steps</span></a></li><li><a href="#housekeeping"><span class="h">Tests and housekeeping</span><span class="v"><b>5</b> steps</span></a></li><li><a href="#later"><span class="h">Later</span><span class="v"><b>3</b> steps</span></a></li>
+      <li><a href="#ideas"><span class="h">Ideas</span><span class="v"><b>6</b>, not commitments</span></a></li>
+    </ul>
+
+    <section id="now">
+      <div class="sec-head">
+        <span class="label">Now</span>
+        <h2>Blocked on you</h2>
+      </div>
+      <p class="prose">Credits and a real voice come first: nothing that calls the API can be tested without credits, and every accuracy number so far comes from synthesized audio.</p>
+      <div class="steps">
+        <article class="step" id="s01">
+          <div class="step-meta"><span class="step-no">01</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 14 Oct</span></div>
+          <div>
+            <h3>Add OpenAI credits</h3>
+            <p class="why">The account returned <code>insufficient_quota</code> on 14 October. Credits were added the same day.</p>
+            <dl class="facts"><dt>Result</dt><dd>Tool-calling requests succeed, and live <code>/api/chat</code> and <code>/api/hum</code> requests returned valid answers on the new model.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s02">
+          <div class="step-meta"><span class="step-no">02</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 14 Oct</span></div>
+          <div>
+            <h3>Switch to <code>gpt-5.6-luna</code></h3>
+            <p class="why">Luna scored 5/5 on the melody benchmark, the same as <code>gpt-5.4-mini</code>, at $0.20 / $1.20 per million tokens against $0.75 / $4.50. It needs <code>reasoning_effort="none"</code> to use function tools on Chat Completions and still returns string content.</p>
+            <dl class="facts"><dt>Result</dt><dd><code>core.py</code> now uses it and <code>docs/decisions.md</code> records the benchmark. The benchmark covers one melody task, so plain Strudel questions and hard multi-step fixes are unmeasured. Raise <code>reasoning_effort</code> if answers get worse.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s03">
+          <div class="step-meta"><span class="step-no">03</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">15 min</span></div>
+          <div>
+            <h3>Hum into it with a real voice</h3>
+            <p class="why">The transcription was tuned on synthesized hums. The realistic generator is a careful model of a voice, but it is still a model.</p>
+            <dl class="facts"><dt>How</dt><dd>Hum three takes: something slow with repeated notes, something fast, and a tune you know well. See Start here.</dd><dt>Done when</dt><dd>For each take you can say whether held notes shattered, whether repeated notes merged, and whether the tempo was right, half or double.</dd><dt>Unblocks</dt><dd><a href='#s04'>04</a> and <a href='#s05'>05</a></dd></dl>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="quality">
+      <div class="sec-head">
+        <span class="label">Hum quality</span>
+        <h2>Making the transcription trustworthy</h2>
+      </div>
+      <p class="prose">Everything here is measured against real takes, so it waits on step 03.</p>
+      <div class="steps">
+        <article class="step" id="s04">
+          <div class="step-meta"><span class="step-no">04</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Turn your hums into regression tests</h3>
+            <p class="why">Synthesized audio proves the pipeline works. Only labelled recordings of a voice prove it keeps working for one.</p>
+            <dl class="facts"><dt>How</dt><dd>Save five to ten takes, each with the melody you meant written beside it, as fixtures next to the realistic suite. Keep them in an ignored folder if the repository will be public.</dd><dt>Done when</dt><dd><code>pytest</code> runs them alongside the existing 62 tests.</dd><dt>Depends on</dt><dd><a href='#s03'>03</a></dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s05">
+          <div class="step-meta"><span class="step-no">05</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small to medium</span></div>
+          <div>
+            <h3>Tune transcription on your takes</h3>
+            <p class="why">The loudness-dip prominence, the 80 ms minimum note and the 60–180 bpm tempo window were all set on synthesized audio.</p>
+            <dl class="facts"><dt>Done when</dt><dd>Your recorded fixtures pass, and so do the synthetic tests.</dd><dt>Depends on</dt><dd><a href='#s04'>04</a>, so every change is measured rather than judged by ear</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s06">
+          <div class="step-meta"><span class="step-no">06</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Fix tempo in one click</h3>
+            <p class="why">Half- and double-time readings are inherent to hearing a pulse. Correcting one today means editing the <code>setcpm</code> line by hand.</p>
+            <dl class="facts"><dt>How</dt><dd>Add ×2 and ÷2 controls to the As hummed panel that rewrite <code>setcpm</code> and replay.</dd><dt>Done when</dt><dd>A take read at half tempo can be corrected without typing.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s07">
+          <div class="step-meta"><span class="step-no">07</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
+          <div>
+            <h3>Settle the tempo numbers and count the fallback</h3>
+            <p class="why"><code>_estimate_tempo</code>'s docstring says 19 of 21 realistic takes land within 10%, while the commit and <code>docs/humming.md</code> say 21 of 21. The <code>melody.py</code> docstring and the humming diagram still say tempo comes from <code>beat_track</code>. Nothing counts how often the <code>beat_track</code> fallback fires.</p>
+            <dl class="facts"><dt>Result</dt><dd>Re-measured on all 21 realistic takes: the median-gap method is 21 of 21 within 10% (also 21 of 21 within 5%) and <code>beat_track</code> alone is 8 of 21. The docstring, diagram and docs are corrected, and the fallback now prints a warning each time it fires, with two new tests.</dd></dl>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="reliability">
+      <div class="sec-head">
+        <span class="label">Agent and reliability</span>
+        <h2>Fewer failures, lower latency</h2>
+      </div>
+      <p class="prose">Independent of each other. Ordered by how soon they pay off.</p>
+      <div class="steps">
+        <article class="step" id="s08">
+          <div class="step-meta"><span class="step-no">08</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
+          <div>
+            <h3>Retry model calls with backoff</h3>
+            <p class="why">A rate limit used to fail the whole request after two quick attempts. The hum endpoint still returned its transcription, but the chat endpoint returned only an error.</p>
+            <dl class="facts"><dt>Result</dt><dd>The chat model now allows 5 retries with exponential backoff, about 15 seconds of waiting. An out-of-credits error now says so instead of calling it a rate limit. The retry path itself is untested, because it needs a real 429.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s09">
+          <div class="step-meta"><span class="step-no">09</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Closed</span><span class="size">closed 15 Oct</span></div>
+          <div>
+            <h3>Build the agent once</h3>
+            <p class="why"><code>run_llm</code> builds a new agent on every request. Measured: that takes about 1.2 ms (max 2.7 ms over 20 builds), against roughly 10 s for the model call.</p>
+            <dl class="facts"><dt>Result</dt><dd>Not worth changing. The comments and docs that called it wasteful are corrected. Revisit only if the ratio changes.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s10">
+          <div class="step-meta"><span class="step-no">10</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">medium</span></div>
+          <div>
+            <h3>Keep a warm sandbox</h3>
+            <p class="why">Every validation starts Node and imports Strudel from scratch, and a correction loop pays that two or three times per answer.</p>
+            <dl class="facts"><dt>Trade-off</dt><dd>A long-lived worker gives up per-request isolation. Restart it every few dozen patterns and after any timeout, and keep the same permission flags.</dd><dt>Done when</dt><dd>Validation latency is measured before and after, and the file-write, network and subprocess escapes still fail inside the worker.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s11">
+          <div class="step-meta"><span class="step-no">11</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
+          <div>
+            <h3>Say so when the sandbox is missing</h3>
+            <p class="why">If <code>node</code> is not on the path or <code>sandbox/node_modules</code> is missing, the tool tells the agent to answer unverified and the server used to log nothing.</p>
+            <dl class="facts"><dt>Result</dt><dd><code>core.py</code> prints a "Pattern validator disabled" warning once at startup, and the validator and the warning share one check. Verified by temporarily moving <code>node_modules</code> aside.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s12">
+          <div class="step-meta"><span class="step-no">12</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Support the Responses API</h3>
+            <p class="why"><code>gpt-6-astra</code> and <code>gpt-5.6-sol</code> reject function tools on Chat Completions, and their replies arrive as content blocks that <code>run_llm</code> and the server treat as strings. Sol turned out not to need it: with <code>reasoning_effort="none"</code> it works on Chat Completions and is in the model picker. Only <code>gpt-6-astra</code> still needs this.</p>
+            <dl class="facts"><dt>Done when</dt><dd><code>gpt-6-astra</code> runs through the full pipeline. Re-benchmark before offering it, since it did not beat the cheaper models on this task.</dd></dl>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="validation">
+      <div class="sec-head">
+        <span class="label">Validation correctness</span>
+        <h2>Making VALID mean it plays</h2>
+      </div>
+      <p class="prose">Three gaps between what the sandbox accepts and what the browser plays.</p>
+      <div class="steps">
+        <article class="step" id="s13">
+          <div class="step-meta"><span class="step-no">13</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Check sound names against the real sample list</h3>
+            <p class="why">The validator flags <code>gm_</code> soundfonts by prefix only. An invented drum name passes validation and then plays silence.</p>
+            <dl class="facts"><dt>How</dt><dd>Fetch the dirt-samples sample map once, at install time, and ship it with the sandbox. The sandbox has no network by design, so it cannot fetch the list when it runs.</dd><dt>Done when</dt><dd>A pattern using <code>sound("bdd")</code> comes back with a warning naming the unknown sound.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s14">
+          <div class="step-meta"><span class="step-no">14</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small to medium</span></div>
+          <div>
+            <h3>Align the two Strudel versions</h3>
+            <p class="why">The page plays with <code>@strudel/web</code> 1.3.0, and the sandbox validates with <code>@strudel/core</code> 1.2.6. A function that exists in only one of them is judged by the other.</p>
+            <dl class="facts"><dt>How</dt><dd>Find which core release the page's bundle contains. Then pin the page to a release that matches the sandbox, or run the sandbox on the page's own bundle if it will load in Node.</dd><dt>Done when</dt><dd>Both sides report the same version, and a test fails if they ever diverge.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s15">
+          <div class="step-meta"><span class="step-no">15</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">tiny</span></div>
+          <div>
+            <h3>Revisit the <code>@kabelsalat/web</code> stub</h3>
+            <p class="why">The stub exists because every <code>@kabelsalat/web</code> release from 0.3.0 to 0.4.1 lacks <code>SalatRepl</code> and <code>@strudel/core</code> has nothing newer than 1.2.6.</p>
+            <dl class="facts"><dt>Done when</dt><dd>Either a newer core or a fixed <code>@kabelsalat/web</code> is out and the stub is removed, or the check is repeated and the stub stays.</dd></dl>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="data">
+      <div class="sec-head">
+        <span class="label">Retrieval and data</span>
+        <h2>Keeping the corpus honest</h2>
+      </div>
+      <p class="prose">BM25 and Pinecone are two views of one corpus, and they drift.</p>
+      <div class="steps">
+        <article class="step" id="s16">
+          <div class="step-meta"><span class="step-no">16</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Stop Pinecone drifting from the chunk dump</h3>
+            <p class="why">Ingestion overwrites <code>chunks.json</code> but upserts vectors, so a changed chunk leaves its old vector behind to keep surfacing in results.</p>
+            <dl class="facts"><dt>Done when</dt><dd>Ingestion deletes vector ids that no longer appear in <code>chunks.json</code>.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s17">
+          <div class="step-meta"><span class="step-no">17</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">tiny</span></div>
+          <div>
+            <h3>Decide whether <code>data/chunks.json</code> is committed</h3>
+            <p class="why">It is gitignored, but the README, <code>docs/extending.md</code> and the architecture traps say to commit it. A fresh clone has no dump, so retrieval quietly falls back to vector-only.</p>
+            <dl class="facts"><dt>Done when</dt><dd>Either the file is committed and the ignore rule removed, or every doc says it must be generated first.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s18">
+          <div class="step-meta"><span class="step-no">18</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
+          <div>
+            <h3>Make a failed ingestion batch fail loudly</h3>
+            <p class="why"><code>add_batch</code> logged each batch's exception itself, so the closing success line printed and the process exited 0 even when batches failed. <code>chunks.json</code> is written first, so BM25 ends up ahead of Pinecone.</p>
+            <dl class="facts"><dt>Result</dt><dd>A failed batch now ends the run with the failed batch numbers and exit code 1. Checked against a stubbed Pinecone with no failures, two failures and all failing, not a real failed upload, which would be slow and paid.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s19">
+          <div class="step-meta"><span class="step-no">19</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">medium</span></div>
+          <div>
+            <h3>Tune the hybrid weights on real queries</h3>
+            <p class="why">The 50/50 split and <code>k=10</code> per retriever are a reasonable default, not a measured one.</p>
+            <dl class="facts"><dt>Done when</dt><dd>There is a small set of real questions and the weights are chosen against it. Needs usage data, so it waits on <a href='#s33'>33</a>.</dd></dl>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="housekeeping">
+      <div class="sec-head">
+        <span class="label">Tests and housekeeping</span>
+        <h2>Smaller things that add up</h2>
+      </div>
+            <div class="steps">
+        <article class="step" id="s20">
+          <div class="step-meta"><span class="step-no">20</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Partly done</span><span class="size">partly done 15 Oct</span></div>
+          <div>
+            <h3>Add tests beyond <code>melody.py</code></h3>
+            <p class="why">The server's HTTP layer is now covered by 26 tests in <code>tests/test_server.py</code>, with <code>run_llm</code> stubbed so nothing touches the network or <code>backend.core</code>: model validation, history filtering, HTML escaping, source de-duplication, error messages, and the hum endpoint's 400, 413, 422 and degrade-to-200 paths. Four deliberate bugs in <code>server.py</code> each failed exactly one test.</p>
+            <dl class="facts"><dt>Still untested</dt><dd>The agent loop, retrieval, the sandbox report parser in <code>validate_pattern</code>, and the frontend (including the model picker's JavaScript).</dd><dt>Done when</dt><dd>The sandbox parser and the picker are covered, and the agent and retrieval each have at least a smoke test.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s21">
+          <div class="step-meta"><span class="step-no">21</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">tiny</span></div>
+          <div>
+            <h3>Fix <code>.env.example</code></h3>
+            <p class="why">It describes an <code>OPENAI_CHAT_MODEL</code> variable and a <code>search_web</code> tool that do not exist, and marks <code>PINECONE_API_KEY</code> optional when the app needs it.</p>
+            <dl class="facts"><dt>Done when</dt><dd>It matches what the code reads.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s22">
+          <div class="step-meta"><span class="step-no">22</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">tiny</span></div>
+          <div>
+            <h3>Fix the ingestion docstring</h3>
+            <p class="why"><code>ingestion.py</code>'s module docstring says it crawls <code>python.langchain.com</code>. It crawls <code>strudel.cc</code>.</p>
+            <dl class="facts"><dt>Done when</dt><dd>The docstring is correct.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s23">
+          <div class="step-meta"><span class="step-no">23</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">15 min</span></div>
+          <div>
+            <h3>Confirm or delete the inferred decisions</h3>
+            <p class="why">Several entries in <code>docs/decisions.md</code> are marked "inferred — confirm": hybrid retrieval weights, FastAPI over Flask, Pinecone over Chroma, and the vanilla frontend over Gradio.</p>
+            <dl class="facts"><dt>Done when</dt><dd>Each is confirmed with its real reason, or deleted.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s24">
+          <div class="step-meta"><span class="step-no">24</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">about 1 h</span></div>
+          <div>
+            <h3>Review and merge the branch</h3>
+            <p class="why">Thirteen commits of new subsystems sit on <code>feat/hum-to-pattern</code> and <code>main</code> has none of them. Each message explains why, so reading them in order is the fastest way in.</p>
+            <dl class="facts"><dt>How</dt><dd><code>gh pr create --base main --head feat/hum-to-pattern</code>. Merging after the reliability steps keeps the diff reviewable.</dd><dt>Done when</dt><dd>The branch is merged into <code>main</code>.</dd></dl>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="later">
+      <div class="sec-head">
+        <span class="label">Later</span>
+        <h2>Before anyone else uses it</h2>
+      </div>
+      <p class="prose">None of these matter while the app runs on your own machine. All of them matter the day it does not.</p>
+      <div class="steps">
+        <article class="step" id="s25">
+          <div class="step-meta"><span class="step-no">25</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">medium</span></div>
+          <div>
+            <h3>Pick a host and serve over HTTPS</h3>
+            <p class="why"><code>python app/server.py</code> binds localhost only and nothing in the repo says where it would run. <code>docs/runbook.md</code> has a TODO where the deploy steps should be.</p>
+            <dl class="facts"><dt>Done when</dt><dd>The backend has a real hostname and certificate, and the runbook has real deploy, rollback and what-to-check-when-it's-down steps.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s26">
+          <div class="step-meta"><span class="step-no">26</span><span class="owner"><span class="lamp" aria-hidden="true"></span>You</span><span class="size">a conversation with a lawyer</span></div>
+          <div>
+            <h3>Get the AGPL question answered</h3>
+            <p class="why">Strudel is AGPL-3.0. The sandbox runs it inside a networked service, which is the case the licence's network clause addresses.</p>
+            <dl class="facts"><dt>Done when</dt><dd>You know what source you must publish.</dd></dl>
+          </div>
+        </article>
+        <article class="step" id="s27">
+          <div class="step-meta"><span class="step-no">27</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div>
+            <h3>Add rate limits and a spend cap</h3>
+            <p class="why">Both endpoints call paid APIs and neither is limited, so an open instance is an open tap on the OpenAI bill. The model picker makes it worse: any visitor can choose Sol, the priciest model.</p>
+            <dl class="facts"><dt>Done when</dt><dd>Requests are limited per client and a daily spend ceiling stops the model calls. Consider restricting the picker or defaulting visitors to Luna.</dd></dl>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="ideas">
+      <div class="sec-head">
+        <span class="label">Ideas</span>
+        <h2>Worth exploring, not yet worth planning</h2>
+      </div>
+      <div class="ideas">
+        <div class="idea" id="s28"><h3>28 · Lyrics from audio</h3><p>Record or attach audio and ask about the lyrics. Needs a speech-to-text step, because today the agent never hears the audio and <code>/api/chat</code> takes text only. The text would feed the chat flow beside the melody summary.</p></div>
+        <div class="idea" id="s29"><h3>29 · Spoken instructions</h3><p>Audio models failed at pitch, but transcribing words is what they are good at. Saying "make it darker" is a natural gesture. Shares the speech-to-text step with 28.</p></div>
+        <div class="idea" id="s30"><h3>30 · Chords and harmony</h3><p>The pipeline is monophonic. A polyphonic transcriber such as Spotify's basic-pitch could add harmony, if its dependencies install on Python 3.13.</p></div>
+        <div class="idea" id="s31"><h3>31 · Swing and triplets</h3><p>The grid is straight sixteenth notes, so a shuffle is forced onto the nearest step.</p></div>
+        <div class="idea" id="s32"><h3>32 · A native app again</h3><p>The Capacitor shell was removed on 14 October to focus on the web app. It is recoverable from git history (<code>2d88161</code>) and only makes sense once the backend has a deployment target.</p></div>
+        <div class="idea" id="s33"><h3>33 · Measure it in use</h3><p>LangSmith tracing is already wired through environment variables, but nothing records latency, tool calls per answer, or how often validation changes the model's pattern.</p></div>
+        </div>
+
+      <footer class="end">Grounded in the code at commit <code>9d5bb31</code> plus the model switch. For how the pieces fit together, see <a href="architecture.md">docs/architecture.md</a>.</footer>
+    </section>
+  </main>
+</div>
+</body>
+</html>
