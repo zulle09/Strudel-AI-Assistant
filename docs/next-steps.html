@@ -194,10 +194,10 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
     <div class="intro">
       <span class="label">Next steps</span>
       <h1>StrudelAssistant Setlist</h1>
-      <p class="lede">What comes next for the web app, now that the iOS shell is gone. Credits are in and the model is switched to Luna. The main step that needs you is a real-voice hum, and the rest can be handed off in almost any order.</p>
+      <p class="lede">What comes next for the web app, now that the iOS shell is gone. Credits are in, the model is Luna, and retries and the startup warning are done. The main step that needs you is a real-voice hum, and the rest can be handed off in almost any order.</p>
       <div class="meta">
         <span>follows <b>feat/hum-to-pattern</b> at <b>9d5bb31</b></span>
-        <span><b>27</b> steps · <b>6</b> ideas · <b>2</b> done · <b>4</b> need you</span>
+        <span><b>27</b> steps · <b>6</b> ideas · <b>4</b> done · <b>4</b> need you</span>
         <span>14 October 2026</span>
       </div>
     </div>
@@ -309,11 +309,11 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
       <p class="prose">Independent of each other. Ordered by how soon they pay off.</p>
       <div class="steps">
         <article class="step" id="s08">
-          <div class="step-meta"><span class="step-no">08</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div class="step-meta"><span class="step-no">08</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
           <div>
             <h3>Retry model calls with backoff</h3>
-            <p class="why">A rate limit or quota error fails the whole request. The hum endpoint still returns its transcription, but the chat endpoint returns only an error.</p>
-            <dl class="facts"><dt>Done when</dt><dd>A rate-limited call is retried with exponential backoff before anyone sees an error.</dd></dl>
+            <p class="why">A rate limit used to fail the whole request after two quick attempts. The hum endpoint still returned its transcription, but the chat endpoint returned only an error.</p>
+            <dl class="facts"><dt>Result</dt><dd>The chat model now allows 5 retries with exponential backoff, about 15 seconds of waiting. An out-of-credits error now says so instead of calling it a rate limit. The retry path itself is untested, because it needs a real 429.</dd></dl>
           </div>
         </article>
         <article class="step" id="s09">
@@ -333,19 +333,19 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
           </div>
         </article>
         <article class="step" id="s11">
-          <div class="step-meta"><span class="step-no">11</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
+          <div class="step-meta"><span class="step-no">11</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Done</span><span class="size">done 15 Oct</span></div>
           <div>
             <h3>Say so when the sandbox is missing</h3>
-            <p class="why">If <code>node</code> is not on the path or <code>sandbox/node_modules</code> is missing, the tool tells the agent to answer unverified and the server logs nothing.</p>
-            <dl class="facts"><dt>Done when</dt><dd>The server logs a warning at startup, and the sandbox state is visible without reading an answer.</dd></dl>
+            <p class="why">If <code>node</code> is not on the path or <code>sandbox/node_modules</code> is missing, the tool tells the agent to answer unverified and the server used to log nothing.</p>
+            <dl class="facts"><dt>Result</dt><dd><code>core.py</code> prints a "Pattern validator disabled" warning once at startup, and the validator and the warning share one check. Verified by temporarily moving <code>node_modules</code> aside.</dd></dl>
           </div>
         </article>
         <article class="step" id="s12">
           <div class="step-meta"><span class="step-no">12</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
           <div>
             <h3>Support the Responses API</h3>
-            <p class="why"><code>gpt-6-astra</code> and <code>gpt-5.6-sol</code> reject function tools on Chat Completions, and their replies arrive as content blocks that <code>run_llm</code> and the server treat as strings. Luna did not need this, so it is only worth doing if a stronger model is wanted.</p>
-            <dl class="facts"><dt>Done when</dt><dd>Both run through the full pipeline. Re-benchmark before switching, since neither beat the cheaper models on this task.</dd></dl>
+            <p class="why"><code>gpt-6-astra</code> and <code>gpt-5.6-sol</code> reject function tools on Chat Completions, and their replies arrive as content blocks that <code>run_llm</code> and the server treat as strings. Sol turned out not to need it: with <code>reasoning_effort="none"</code> it works on Chat Completions and is in the model picker. Only <code>gpt-6-astra</code> still needs this.</p>
+            <dl class="facts"><dt>Done when</dt><dd><code>gpt-6-astra</code> runs through the full pipeline. Re-benchmark before offering it, since it did not beat the cheaper models on this task.</dd></dl>
           </div>
         </article>
       </div>
@@ -503,8 +503,8 @@ footer.end{margin-top:80px;padding-top:18px;border-top:1px solid var(--edge);fon
           <div class="step-meta"><span class="step-no">27</span><span class="owner handoff"><span class="lamp off" aria-hidden="true"></span>Hand off</span><span class="size">small</span></div>
           <div>
             <h3>Add rate limits and a spend cap</h3>
-            <p class="why">Both endpoints call paid APIs and neither is limited, so an open instance is an open tap on the OpenAI bill.</p>
-            <dl class="facts"><dt>Done when</dt><dd>Requests are limited per client and a daily spend ceiling stops the model calls.</dd></dl>
+            <p class="why">Both endpoints call paid APIs and neither is limited, so an open instance is an open tap on the OpenAI bill. The model picker makes it worse: any visitor can choose Sol, the priciest model.</p>
+            <dl class="facts"><dt>Done when</dt><dd>Requests are limited per client and a daily spend ceiling stops the model calls. Consider restricting the picker or defaulting visitors to Luna.</dd></dl>
           </div>
         </article>
       </div>
