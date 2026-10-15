@@ -393,7 +393,7 @@ committing the new dump, makes the two retrievers disagree.
 **Imports depend on how you launch.** `core.py` does `from logger import ...`
 and `server.py` does `from backend.core import ...` — both resolve because
 `app/` ends up on `sys.path`. `server.py` inserts its own directory explicitly,
-so `uv run python app/server.py` and `uvicorn server:app` both work. Move these
+so `python app/server.py` and `uvicorn server:app` both work. Move these
 files and the imports break.
 
 **`core.py` does real work at import time.** Importing it builds the BM25 index

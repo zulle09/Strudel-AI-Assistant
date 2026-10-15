@@ -13,24 +13,24 @@ for it.
    created **before** the first run. TODO: the exact console/CLI steps aren't recorded anywhere in
    this repo, and nothing in the code creates the index — `PineconeVectorStore(...)` in both
    `core.py` and `ingestion.py` assumes it already exists.
-3. `uv sync`
+3. `conda env create -f environment.yml`, then `conda activate StrudelAssistant`
 4. `(cd sandbox && npm install)` — optional; the agent degrades to "unverified" pattern answers
    without it, it doesn't fail to start.
-5. `data/chunks.json` — gitignored, not created by `uv sync`. Either copy one from another
+5. `data/chunks.json` — gitignored, not created by the conda env. Either copy one from another
    environment or run ingestion (below). Without it, BM25 is skipped and retrieval silently falls
    back to vector-only.
 
 ## Start
 
 ```bash
-uv run python app/server.py            # binds 127.0.0.1:$PORT (default 8000)
+python app/server.py            # binds 127.0.0.1:$PORT (default 8000)
 ```
 
 That entry point cannot bind non-locally — there's no `--host` flag. For another machine
 on the network, run uvicorn directly instead:
 
 ```bash
-uv run uvicorn server:app --app-dir app --host 0.0.0.0 --port 8000
+uvicorn server:app --app-dir app --host 0.0.0.0 --port 8000
 ```
 
 Add `STRUDEL_DEBUG=1` in front of either command to also return tracebacks to the browser; leave it
@@ -72,7 +72,7 @@ There's no database migration in the usual sense. The closest equivalent is re-r
 which is long-running and paid:
 
 ```bash
-uv run python app/ingestion.py
+python app/ingestion.py
 ```
 
 What it does: crawls strudel.cc with Tavily, fetches and parses JSDoc comments from the Strudel
@@ -130,17 +130,17 @@ Roughly in order of how often each one turns out to be the cause:
    This degrades silently: no error, no server-side log line, just an agent that says so in its
    answer text.
 5. **Retrieval seems to ignore exact function names.** `data/chunks.json` is probably missing
-   (gitignored, not restored by `uv sync`) — BM25 silently falls back to vector-only. Restore the
+   (gitignored, not restored by the conda env) — BM25 silently falls back to vector-only. Restore the
    file or re-run ingestion.
 6. **Humming requests fail specifically, chat is fine.** `POST /api/hum` imports `backend.melody`
-   (and therefore `librosa`) lazily, inside the handler. Confirm `uv sync` actually pulled
-   `librosa`/`soundfile`/`scipy` — a partial `uv sync` would only surface here, not at server
+   (and therefore `librosa`) lazily, inside the handler. Confirm the conda env actually has
+   `librosa`/`soundfile`/`scipy` — a partial install would only surface here, not at server
    startup.
 
 ## Tests
 
 ```bash
-uv run pytest              # ~5s, no network or API keys needed, 36 tests
+pytest              # ~5s, no network or API keys needed, 36 tests
 ```
 
 This only exercises `app/backend/melody.py` against synthesized hums. It proves nothing about the

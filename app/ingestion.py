@@ -14,7 +14,7 @@ hybrid retriever - keep that file and the Pinecone index in step.
 Long-running and paid (crawling + embedding thousands of chunks). Run once.
 Python puts this file's own directory on sys.path[0], so the sibling `logger`
 import resolves from any working directory:
-    uv run python app/ingestion.py
+    python app/ingestion.py
 """
 
 import asyncio

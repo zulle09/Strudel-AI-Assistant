@@ -22,19 +22,20 @@ The docs are detailed. Read the relevant one before a non-trivial change:
 ## Commands
 
 ```bash
-uv sync                                        # Python 3.13 deps (uv.lock)
+conda env create -f environment.yml           # first time; later: conda env update -f environment.yml --prune
+conda activate StrudelAssistant                # every shell below assumes this
 (cd sandbox && npm install)                    # pattern validator; the agent degrades without it
-uv run python app/server.py                    # http://localhost:8000, PORT overrides; no auto-reload
-STRUDEL_DEBUG=1 uv run python app/server.py    # also return tracebacks to the browser
+python app/server.py                            # http://localhost:8000, PORT overrides; no auto-reload
+STRUDEL_DEBUG=1 python app/server.py            # also return tracebacks to the browser
 
-uv run pytest                                  # whole suite, ~5s, no network or API keys
-uv run pytest tests/test_melody.py::test_tempos
-uv run pytest tests/test_realistic.py -k repeated
+pytest                                         # whole suite, ~5s, no network or API keys
+pytest tests/test_melody.py::test_tempos
+pytest tests/test_realistic.py -k repeated
 
 # Run the validator by hand: pattern on stdin, JSON report on stdout
 cd sandbox && echo 's("bd sd")' | node --permission --allow-fs-read="$PWD" validate.mjs
 
-uv run python app/ingestion.py                 # rebuilds chunks.json + upserts Pinecone: slow and PAID
+python app/ingestion.py                         # rebuilds chunks.json + upserts Pinecone: slow and PAID
 ```
 
 No linter or formatter is configured. The frontend has no build step: edit `app/web/*` and reload
@@ -72,7 +73,7 @@ its content here.
 Things that have already gone wrong once, or are easy to break while "helpfully" refactoring. The
 reasoning behind each is in `docs/architecture.md`; this is the checklist.
 
-- **Launch by file path** (`app/server.py`, `uv run pytest`, ...) — moving files breaks the
+- **Launch by file path** (`app/server.py`, `pytest`, ...) — moving files breaks the
   `sys.path` setup the imports depend on.
 - Don't import `backend.core` at module level anywhere outside `server.py`'s lazy loader — it does
   real work (builds BM25, opens Pinecone, needs API keys) at import time.

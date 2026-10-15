@@ -16,10 +16,11 @@ Or **hum a melody** and get it back as a pattern.
 
 ## Setup
 
-Requires [uv](https://docs.astral.sh/uv/).
+Requires [conda](https://docs.conda.io/) (Miniconda is enough).
 
 ```bash
-uv sync
+conda env create -f environment.yml
+conda activate StrudelAssistant
 ```
 
 The pattern validator runs in Node, so install it too. It is optional: without
@@ -42,7 +43,7 @@ Create a `.env` like the `.env.example` with:
 Then run the app:
 
 ```bash
-uv run python app/server.py
+python app/server.py
 ```
 
 Open http://localhost:8000. On the first Play, `@strudel/web` downloads the drum samples from GitHub, so the first playback takes a few seconds.
@@ -52,7 +53,7 @@ Open http://localhost:8000. On the first Play, `@strudel/web` downloads the drum
 The repo ships with `data/chunks.json`, so retrieval works out of the box as long as the Pinecone index is populated. To rebuild both from scratch:
 
 ```bash
-uv run python app/ingestion.py
+python app/ingestion.py
 ```
 
 This crawls the documentation with Tavily, splits it into chunks, writes `data/chunks.json`, and upserts the embeddings to Pinecone. It is long-running and paid (crawling + embedding thousands of chunks) — run it once.
@@ -86,7 +87,7 @@ tests/                 # transcription accuracy on clean and realistic synthesis
 
 ## Stack
 
-FastAPI + uvicorn serving a vanilla HTML/CSS/JS frontend (no bundler, no build step), managed with [uv](https://docs.astral.sh/uv/). `librosa` for pitch, onset, tempo and key analysis. LangChain for the agent and hybrid retrieval, OpenAI for chat and embeddings, Pinecone for the vector index, Tavily for crawling during ingestion, `markdown-it-py` to render answers server-side, and `@strudel/web` via CDN for audio in the browser.
+FastAPI + uvicorn serving a vanilla HTML/CSS/JS frontend (no bundler, no build step), managed with [conda](https://docs.conda.io/). `librosa` for pitch, onset, tempo and key analysis. LangChain for the agent and hybrid retrieval, OpenAI for chat and embeddings, Pinecone for the vector index, Tavily for crawling during ingestion, `markdown-it-py` to render answers server-side, and `@strudel/web` via CDN for audio in the browser.
 
 ## License note
 

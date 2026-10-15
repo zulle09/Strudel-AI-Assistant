@@ -1,0 +1,25 @@
+name: StrudelAssistant
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13
+  - pip
+  - pip:
+      - openai>=1.50,<2.0
+      - python-dotenv>=1.0,<2.0
+      - langsmith>=0.1.100,<1.0
+      - langchain-tavily>=0.2.18
+      - langchain-pinecone>=0.2.13
+      - langchain-openai>=1.1.9
+      - langchain-core>=1.6.0
+      - langchain-text-splitters>=1.1.2
+      - langchain-community>=0.4.2
+      - rank-bm25>=0.2.2
+      - httpx>=0.28.1
+      - fastapi>=0.141.1
+      - uvicorn>=0.52.4
+      - markdown-it-py>=4.2.0
+      - librosa>=1.0.0
+      - soundfile>=0.14.0
+      - python-multipart>=0.0.32
+      - pytest>=9.1.1

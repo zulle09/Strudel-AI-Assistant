@@ -84,7 +84,7 @@ def _build_retriever():
     if not local_chunks:
         log_warning(
             f"No local chunk dump found at {CHUNKS_PATH}: falling back to vector-only retrieval. "
-            "Run `uv run python app/ingestion.py` to enable hybrid BM25 + vector search."
+            "Run `python app/ingestion.py` to enable hybrid BM25 + vector search."
         )
         return vector_retriever
 

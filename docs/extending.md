@@ -70,7 +70,7 @@ dependency and `TAVILY_API_KEY` is already in `.env`.
 ### Re-index after changing what gets ingested
 
 ```bash
-uv run python app/ingestion.py
+python app/ingestion.py
 ```
 
 Long-running and paid. It rewrites `data/chunks.json` and upserts to Pinecone.
@@ -251,7 +251,7 @@ the page out at zero offset.
 ### Run it
 
 ```bash
-uv run python app/server.py
+python app/server.py
 ```
 
 Serves on `:8000`, or `PORT` if set. Launching by file path matters: it puts
@@ -288,7 +288,7 @@ is set up.
 To get the same trace in the browser, start the server in debug mode:
 
 ```bash
-STRUDEL_DEBUG=1 uv run python app/server.py
+STRUDEL_DEBUG=1 python app/server.py
 ```
 
 The failed message then carries a collapsible **Traceback** block. Leave it off
@@ -323,8 +323,7 @@ Roughly in order of value:
 2. **Build the agent once.** `run_llm` calls `create_agent(...)` per request.
    Hoist it to module level next to `model` and `retriever`.
 3. **Clean up the leftovers** listed at the end of the architecture doc — the
-   stale ingestion docstring, the unused `Chroma` import, `flask` and
-   `tavily-python` in `pyproject.toml`.
+   stale ingestion docstring.
 4. **Delete orphaned vectors on re-ingest**, so BM25 and the vector index stop
    drifting apart. Ingestion already knows every current id; anything else in
    the index is stale.

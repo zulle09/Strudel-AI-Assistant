@@ -10,7 +10,7 @@ existing RAG pipeline in backend.core:
 
 Run it with:
 
-    uv run python app/server.py
+    python app/server.py
 
 Launching by file path matters: Python puts this file's directory (app/) on
 sys.path[0], which is how `backend.core` and its own `from logger import ...`
@@ -127,7 +127,7 @@ def _explain(exc: Exception) -> str:
     if "pinecone" in text:
         return (
             "Couldn't reach the Pinecone index. Check PINECONE_API_KEY in .env, and run "
-            "`uv run python app/ingestion.py` if the index is empty."
+            "`python app/ingestion.py` if the index is empty."
         )
     if "rate limit" in text or "429" in text:
         return "The model API is rate limiting these requests. Wait a moment, then ask again."

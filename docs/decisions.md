@@ -14,6 +14,18 @@ The older iOS entry below is left as written.
 
 Revisit when a backend deployment target exists and a native app is wanted again.
 
+## 2026-10-15 — Conda env instead of uv
+
+Dropped `pyproject.toml`, `uv.lock` and `.python-version` for `environment.yml` (Python 3.13 from
+conda-forge, the same pins installed through its `pip:` section, plus `pytest`). All commands in the
+docs are now `conda activate StrudelAssistant` followed by plain `python` / `pytest`. The reason is
+that the project is now run from the `StrudelAssistant` conda env (the stated reason for the switch
+was only "we switched to conda"; the motive beyond that is not recorded).
+
+Cost: no lockfile, so installs are no longer reproducible; `pip` resolves the `>=` pins fresh each
+time. Revisit if a fresh `conda env create` ever pulls different versions from the ones in use, by
+adding `conda-lock` or an exported `conda env export` file.
+
 ## 2026-10-14 — Chat model: `gpt-5.6-luna` with `reasoning_effort="none"`
 
 Supersedes the "stay on `gpt-5.4-mini`" entry below, which was written before credits were added.

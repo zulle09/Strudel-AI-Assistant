@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "strudel-assistant-dev",
-      "runtimeExecutable": "uv",
-      "runtimeArgs": ["run", "python", "app/server.py"],
+      "runtimeExecutable": "conda",
+      "runtimeArgs": ["run", "--no-capture-output", "-n", "StrudelAssistant", "python", "app/server.py"],
       "port": 8000,
       "autoPort": true
     }
